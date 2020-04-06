@@ -53,7 +53,7 @@ git push
 在新环境下：
 ```
 git clone git@github.com:gouchengsanren/gouchengsanren.github.io.git
-cd gouchengsanren.github.io.git
+cd gouchengsanren.github.io
 npm install
 npm install hexo-deployer-git --save
 ```
