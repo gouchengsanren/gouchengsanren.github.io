@@ -1,6 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>linux启动流程</title>
+    <url>/2020/04/12/linux%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/</url>
+    <content><![CDATA[<p>梳理linux的启动流程。</p>
+<a id="more"></a>
+
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">windows             linux</span><br><span class="line">    bios                bootloader(uboot)</span><br><span class="line">    | 启动              | 启动</span><br><span class="line">    windos              linux内核(内核、驱动)</span><br><span class="line">    | 识别              | 识别</span><br><span class="line">    c盘                 根文件系统(自带的app、我们的app)</span><br><span class="line">    | 运行              | 启动</span><br><span class="line">    app                 app</span><br></pre></td></tr></table></figure>
+<br>
+]]></content>
+  </entry>
+  <entry>
+    <title>linux目录结构</title>
+    <url>/2020/04/12/linux%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84/</url>
+    <content><![CDATA[<p>介绍linux的目录结构。</p>
+<a id="more"></a>
+
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">linux目录结构</span><br><span class="line">|-bin           基本命令，所有用户可使用（与开机有关，就是系统启动要用的）</span><br><span class="line">|-boot          启动文件，比如内核等</span><br><span class="line">|-dev           设备文件</span><br><span class="line">|-etc           配置文件</span><br><span class="line">|-home          家目录</span><br><span class="line">|-lib           库（&#x2F;bin &#x2F;sbin下的app用的库，&#x2F;usr&#x2F;bin &#x2F;usr&#x2F;sbin下的也可以放这里，没有限制）</span><br><span class="line">|-media         插上u盘等外设时会挂在到该目录</span><br><span class="line">|-mnt           用来挂在其他文件系统</span><br><span class="line">|-opt           可选程序</span><br><span class="line">|-proc          挂载虚拟的proc文件系统，可以查看各进程信息（proc，其实就是process，但现在</span><br><span class="line">                proc内容很多了</span><br><span class="line">|-root          root用户的家目录</span><br><span class="line">|-sbin          基本的系统命令，系统管理员才能使用（与开机有关，就是系统启动要用的）</span><br><span class="line">|-sys           用来挂载虚拟的sys文件系统，可查看系统信息</span><br><span class="line">|-tmp           临时目录，存放临时文件</span><br><span class="line">|-usr           unix software resource，存放可分享的与不可变动的数据（usr和var是一对，</span><br><span class="line">                usr的不可变动指开机后还在的。相对的，var是变动的，开机后就没了）</span><br><span class="line">|   |-bin       绝大部分用户可使用的指令（与开机无关）</span><br><span class="line">|   |-include   头文件</span><br><span class="line">|   |-lib       库</span><br><span class="line">|   |-local     系统管理员在本机自行安装、下载的软件</span><br><span class="line">|   |-sbin      非系统正常运行所需要的系统命令</span><br><span class="line">|   |-share     放置共享文件的地方，比如&#x2F;usr&#x2F;share&#x2F;man里存放帮助文件</span><br><span class="line">|   |-src       源码</span><br><span class="line">|-var           主要针对常态性变动的文件，包括缓存（cache）、log文件等</span><br></pre></td></tr></table></figure>
+
+]]></content>
+  </entry>
+  <entry>
+    <title>man</title>
+    <url>/2020/04/12/man/</url>
+    <content><![CDATA[<p>记录man的基础知识，常用的指令、系统调用等等的说明。</p>
+<a id="more"></a>
+
+<p><code>man man</code></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1   Executable programs or shell commands</span><br><span class="line">2   System calls (functions provided by the kernel)</span><br><span class="line">3   Library calls (functions within program libraries)</span><br><span class="line">4   Special files (usually found in &#x2F;dev)</span><br><span class="line">5   File formats and conventions eg &#x2F;etc&#x2F;passwd</span><br><span class="line">6   Games</span><br><span class="line">7   Miscellaneous (including macro packages and conventions), e.g. man(7), groff(7)</span><br><span class="line">8   System administration commands (usually only for root)</span><br><span class="line">9   Kernel routines [Non standard]</span><br></pre></td></tr></table></figure>
+<p>man这本书有9本（默认从第1本开始找，依次往后）：</p>
+<ul>
+<li>第一本讲系统指令<br>比如 <code>man ascii</code> 、<code>man sed</code> 等<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SED(1)                                            User Commands                                            SED(1)</span><br><span class="line"></span><br><span class="line">NAME</span><br><span class="line">       sed - stream editor for filtering and transforming text</span><br></pre></td></tr></table></figure>
+左上角的 <code>SED(1)</code> 这个1就是第几本。</li>
+<li>第二本讲系统调用<br>比如 <code>man 2 open</code> 、 <code>man select</code> 等<br>如果 <code>open</code> 不指定 <code>2</code> ，那么 <code>man</code> 默认查询的是 <code>openvt</code>。<br>而 <code>select</code> 在第一本书中没有类似的。</li>
+<li>[FIX ME]<br>
+</li>
+</ul>
+]]></content>
+  </entry>
+  <entry>
+    <title>shell</title>
+    <url>/2020/04/12/shell/</url>
+    <content><![CDATA[<p>记录shell的基本语法、常用的使用技巧等。</p>
+<a id="more"></a>
+
+<p><code>for((i=0;i&lt;10;i++));do echo $i;done</code><br><br></p>
+]]></content>
+  </entry>
+  <entry>
+    <title>串口</title>
+    <url>/2020/04/12/%E4%B8%B2%E5%8F%A3/</url>
+    <content><![CDATA[<p>本post介绍所有的串口。如果后续发现内容过多，不便于浏览，会对内容做拆分。<br>uart、spi、i2c等各单独一个post。</p>
+<a id="more"></a>
+
+<p>串口电平有两种：TTL，RS232（传统的9针串口）。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>ubuntu问题汇总</title>
+    <url>/2020/04/12/ubuntu%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
+    <content><![CDATA[<p>记录常见的ubuntu使用过程中的问题，包括一些配置等。</p>
+<a id="more"></a>
+
+<h2 id="A-start-job-is-running-for-wait-for-network-to-be-Configured"><a href="#A-start-job-is-running-for-wait-for-network-to-be-Configured" class="headerlink" title="A start job is running for wait for network to be Configured"></a>A start job is running for wait for network to be Configured</h2><p>ubuntu 18.04<br>开机时会卡在这一步，原因应该是网络不通。<br>解决方式：<br><code>vim /etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service</code><br>在[Service]标签下增加：<br><code>TimeoutStartSec=2sec</code><br><br></p>
+]]></content>
+  </entry>
+  <entry>
     <title>hexo的迁移</title>
     <url>/2020/04/06/hexo%E7%9A%84%E8%BF%81%E7%A7%BB/</url>
     <content><![CDATA[<p>由于hexo deploy的是编译生成的网页静态文件（hexo init下的.git_deploy）。<br>当更换电脑，由于没有源文件，我们没法更新博文。<br>所以有必要同时对hexo源文件进行备份（其他电脑可随时获取），并能快速恢复hexo环境。<br>本文参考大多数人的做法，将hexo源文件备份至github。</p>
@@ -29,15 +94,6 @@
 <p>至此，环境就恢复了。<br><br></p>
 <h2 id="需要提交的内容"><a href="#需要提交的内容" class="headerlink" title="需要提交的内容"></a>需要提交的内容</h2><hr>
 <p>除了 <code>hexo d</code> 提交网页静态文件到 <code>master</code> 分支。<br>还需要 <code>git add</code> 和 <code>git push</code> 源文件到 <code>hexo</code> 分支。</p>
-]]></content>
-  </entry>
-  <entry>
-    <title>ubuntu问题汇总</title>
-    <url>/2020/04/12/ubuntu%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
-    <content><![CDATA[<p>记录常见的ubuntu使用过程中的问题，包括一些配置等。</p>
-<a id="more"></a>
-
-<h2 id="A-start-job-is-running-for-wait-for-network-to-be-Configured"><a href="#A-start-job-is-running-for-wait-for-network-to-be-Configured" class="headerlink" title="A start job is running for wait for network to be Configured"></a>A start job is running for wait for network to be Configured</h2><p>ubuntu 18.04<br>开机时会卡在这一步，原因应该是网络不通。<br>解决方式：<br><code>vim /etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service</code><br>在[Service]标签下增加：<br><code>TimeoutStartSec=2sec</code><br><br></p>
 ]]></content>
   </entry>
 </search>
