@@ -31,4 +31,13 @@
 <p>除了 <code>hexo d</code> 提交网页静态文件到 <code>master</code> 分支。<br>还需要 <code>git add</code> 和 <code>git push</code> 源文件到 <code>hexo</code> 分支。</p>
 ]]></content>
   </entry>
+  <entry>
+    <title>ubuntu问题汇总</title>
+    <url>/2020/04/12/ubuntu%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
+    <content><![CDATA[<p>记录常见的ubuntu使用过程中的问题，包括一些配置等。</p>
+<a id="more"></a>
+
+<h2 id="A-start-job-is-running-for-wait-for-network-to-be-Configured"><a href="#A-start-job-is-running-for-wait-for-network-to-be-Configured" class="headerlink" title="A start job is running for wait for network to be Configured"></a>A start job is running for wait for network to be Configured</h2><p>ubuntu 18.04<br>开机时会卡在这一步，原因应该是网络不通。<br>解决方式：<br><code>vim /etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service</code><br>在[Service]标签下增加：<br><code>TimeoutStartSec=2sec</code><br><br></p>
+]]></content>
+  </entry>
 </search>
