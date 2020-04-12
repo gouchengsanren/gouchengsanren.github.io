@@ -1,6 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>hexo的迁移</title>
+    <url>/2020/04/06/hexo%E7%9A%84%E8%BF%81%E7%A7%BB/</url>
+    <content><![CDATA[<p>由于hexo deploy的是编译生成的网页静态文件（hexo init下的.git_deploy）。<br>当更换电脑，由于没有源文件，我们没法更新博文。<br>所以有必要同时对hexo源文件进行备份（其他电脑可随时获取），并能快速恢复hexo环境。<br>本文参考大多数人的做法，将hexo源文件备份至github。</p>
+<a id="more"></a>
+
+<h2 id="在github-io仓中新建hexo分支管理源码"><a href="#在github-io仓中新建hexo分支管理源码" class="headerlink" title="在github.io仓中新建hexo分支管理源码"></a>在github.io仓中新建hexo分支管理源码</h2><hr>
+<p>为了便于管理、维护（hexo d和git push源码在一个目录下操作），我们复用github.io仓<br>，新建一个分支 <code>hexo</code> 用于源码的管理。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">gouchengsanren.github.io - master（静态网页文件）</span><br><span class="line">                         \</span><br><span class="line">                           hexo（hexo源码）</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建hexo分支"><a href="#创建hexo分支" class="headerlink" title="创建hexo分支"></a>创建hexo分支</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/hexo%E7%9A%84%E8%BF%81%E7%A7%BB-%E5%88%9B%E5%BB%BAhexo%E5%88%86%E6%94%AF.png?raw=true" class="">
+
+
+<h3 id="添加hexo源文件"><a href="#添加hexo源文件" class="headerlink" title="添加hexo源文件"></a>添加hexo源文件</h3><p>拉下github.io的代码：<br><code>git clone git@github.com:gouchengsanren/gouchengsanren.github.io.git</code></p>
+<p>删除 <code>.git</code> 以外的其他文件：<br><code>rm -rf !(.git)</code></p>
+<p>拷贝hexo源文件到本目录：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">cp -rf &lt;hexo源文件根目录&gt;&#x2F;* .</span><br><span class="line">cp &lt;hexo源文件根目录&gt;&#x2F;.gitignore .</span><br></pre></td></tr></table></figure>
+
+<p>删除其他的 <code>.git</code> 目录（因为git不允许仓库嵌套）：<br><code>find . -name .git</code><br>通常theme下的主题是git clone下来的，需要删除。</p>
+<p>添加并上传：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m &quot;[ADD] 添加hexo源文件&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+<br>
+
+<h2 id="本地快速恢复hexo环境"><a href="#本地快速恢复hexo环境" class="headerlink" title="本地快速恢复hexo环境"></a>本地快速恢复hexo环境</h2><hr>
+<p>在新环境下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git clone git@github.com:gouchengsanren&#x2F;gouchengsanren.github.io.git</span><br><span class="line">cd gouchengsanren.github.io</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+<p>至此，环境就恢复了。<br><br></p>
+<h2 id="需要提交的内容"><a href="#需要提交的内容" class="headerlink" title="需要提交的内容"></a>需要提交的内容</h2><hr>
+<p>除了 <code>hexo d</code> 提交网页静态文件到 <code>master</code> 分支。<br>还需要 <code>git add</code> 和 <code>git push</code> 源文件到 <code>hexo</code> 分支。</p>
+]]></content>
+  </entry>
+  <entry>
     <title>linux启动流程</title>
     <url>/2020/04/12/linux%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/</url>
     <content><![CDATA[<p>梳理linux的启动流程。</p>
@@ -44,16 +75,7 @@
     <content><![CDATA[<p>记录shell的基本语法、常用的使用技巧等。</p>
 <a id="more"></a>
 
-<p><code>for((i=0;i&lt;10;i++));do echo $i;done</code><br><br></p>
-]]></content>
-  </entry>
-  <entry>
-    <title>串口</title>
-    <url>/2020/04/12/%E4%B8%B2%E5%8F%A3/</url>
-    <content><![CDATA[<p>本post介绍所有的串口。如果后续发现内容过多，不便于浏览，会对内容做拆分。<br>uart、spi、i2c等各单独一个post。</p>
-<a id="more"></a>
-
-<p>串口电平有两种：TTL，RS232（传统的9针串口）。</p>
+<p><strong>不一定非得写shell脚本再执行，可以直接执行：</strong><br><code>for((i=0;i&lt;10;i++));do echo $i;done</code><br><br><br><strong>xargs cp结合使用：</strong><br><code>find . -name &quot;*&quot; | xargs -i cp {}  /home/users/</code><br><br></p>
 ]]></content>
   </entry>
   <entry>
@@ -66,34 +88,12 @@
 ]]></content>
   </entry>
   <entry>
-    <title>hexo的迁移</title>
-    <url>/2020/04/06/hexo%E7%9A%84%E8%BF%81%E7%A7%BB/</url>
-    <content><![CDATA[<p>由于hexo deploy的是编译生成的网页静态文件（hexo init下的.git_deploy）。<br>当更换电脑，由于没有源文件，我们没法更新博文。<br>所以有必要同时对hexo源文件进行备份（其他电脑可随时获取），并能快速恢复hexo环境。<br>本文参考大多数人的做法，将hexo源文件备份至github。</p>
+    <title>串口</title>
+    <url>/2020/04/12/%E4%B8%B2%E5%8F%A3/</url>
+    <content><![CDATA[<p>本post介绍所有的串口。如果后续发现内容过多，不便于浏览，会对内容做拆分。<br>uart、spi、i2c等各单独一个post。</p>
 <a id="more"></a>
 
-<h2 id="在github-io仓中新建hexo分支管理源码"><a href="#在github-io仓中新建hexo分支管理源码" class="headerlink" title="在github.io仓中新建hexo分支管理源码"></a>在github.io仓中新建hexo分支管理源码</h2><hr>
-<p>为了便于管理、维护（hexo d和git push源码在一个目录下操作），我们复用github.io仓<br>，新建一个分支 <code>hexo</code> 用于源码的管理。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">gouchengsanren.github.io - master（静态网页文件）</span><br><span class="line">                         \</span><br><span class="line">                           hexo（hexo源码）</span><br></pre></td></tr></table></figure>
-
-<h3 id="创建hexo分支"><a href="#创建hexo分支" class="headerlink" title="创建hexo分支"></a>创建hexo分支</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/hexo%E7%9A%84%E8%BF%81%E7%A7%BB-%E5%88%9B%E5%BB%BAhexo%E5%88%86%E6%94%AF.png?raw=true" class="">
-
-
-<h3 id="添加hexo源文件"><a href="#添加hexo源文件" class="headerlink" title="添加hexo源文件"></a>添加hexo源文件</h3><p>拉下github.io的代码：<br><code>git clone git@github.com:gouchengsanren/gouchengsanren.github.io.git</code></p>
-<p>删除 <code>.git</code> 以外的其他文件：<br><code>rm -rf !(.git)</code></p>
-<p>拷贝hexo源文件到本目录：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">cp -rf &lt;hexo源文件根目录&gt;&#x2F;* .</span><br><span class="line">cp &lt;hexo源文件根目录&gt;&#x2F;.gitignore .</span><br></pre></td></tr></table></figure>
-
-<p>删除其他的 <code>.git</code> 目录（因为git不允许仓库嵌套）：<br><code>find . -name .git</code><br>通常theme下的主题是git clone下来的，需要删除。</p>
-<p>添加并上传：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m &quot;[ADD] 添加hexo源文件&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
-<br>
-
-<h2 id="本地快速恢复hexo环境"><a href="#本地快速恢复hexo环境" class="headerlink" title="本地快速恢复hexo环境"></a>本地快速恢复hexo环境</h2><hr>
-<p>在新环境下：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git clone git@github.com:gouchengsanren&#x2F;gouchengsanren.github.io.git</span><br><span class="line">cd gouchengsanren.github.io</span><br><span class="line">npm install</span><br><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
-<p>至此，环境就恢复了。<br><br></p>
-<h2 id="需要提交的内容"><a href="#需要提交的内容" class="headerlink" title="需要提交的内容"></a>需要提交的内容</h2><hr>
-<p>除了 <code>hexo d</code> 提交网页静态文件到 <code>master</code> 分支。<br>还需要 <code>git add</code> 和 <code>git push</code> 源文件到 <code>hexo</code> 分支。</p>
+<p>串口电平有两种：TTL，RS232（传统的9针串口）。</p>
 ]]></content>
   </entry>
 </search>
