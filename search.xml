@@ -57,19 +57,6 @@
       </categories>
   </entry>
   <entry>
-    <title>linux启动流程</title>
-    <url>/2020/04/12/linux%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/</url>
-    <content><![CDATA[<p>梳理linux的启动流程。</p>
-<a id="more"></a>
-
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">windows             linux</span><br><span class="line">    bios                bootloader(uboot)</span><br><span class="line">    | 启动              | 启动</span><br><span class="line">    windos              linux内核(内核、驱动)</span><br><span class="line">    | 识别              | 识别</span><br><span class="line">    c盘                 根文件系统(自带的app、我们的app)</span><br><span class="line">    | 运行              | 启动</span><br><span class="line">    app                 app</span><br></pre></td></tr></table></figure>
-<br>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-  </entry>
-  <entry>
     <title>linux目录结构</title>
     <url>/2020/04/12/linux%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84/</url>
     <content><![CDATA[<p>介绍linux的目录结构。</p>
@@ -77,6 +64,19 @@
 
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">linux目录结构</span><br><span class="line">|-bin           基本命令，所有用户可使用（与开机有关，就是系统启动要用的）</span><br><span class="line">|-boot          启动文件，比如内核等</span><br><span class="line">|-dev           设备文件</span><br><span class="line">|-etc           配置文件</span><br><span class="line">|-home          家目录</span><br><span class="line">|-lib           库（&#x2F;bin &#x2F;sbin下的app用的库，&#x2F;usr&#x2F;bin &#x2F;usr&#x2F;sbin下的也可以放这里，没有限制）</span><br><span class="line">|-media         插上u盘等外设时会挂在到该目录</span><br><span class="line">|-mnt           用来挂在其他文件系统</span><br><span class="line">|-opt           可选程序</span><br><span class="line">|-proc          挂载虚拟的proc文件系统，可以查看各进程信息（proc，其实就是process，但现在</span><br><span class="line">                proc内容很多了</span><br><span class="line">|-root          root用户的家目录</span><br><span class="line">|-sbin          基本的系统命令，系统管理员才能使用（与开机有关，就是系统启动要用的）</span><br><span class="line">|-sys           用来挂载虚拟的sys文件系统，可查看系统信息</span><br><span class="line">|-tmp           临时目录，存放临时文件</span><br><span class="line">|-usr           unix software resource，存放可分享的与不可变动的数据（usr和var是一对，</span><br><span class="line">                usr的不可变动指开机后还在的。相对的，var是变动的，开机后就没了）</span><br><span class="line">|   |-bin       绝大部分用户可使用的指令（与开机无关）</span><br><span class="line">|   |-include   头文件</span><br><span class="line">|   |-lib       库</span><br><span class="line">|   |-local     系统管理员在本机自行安装、下载的软件</span><br><span class="line">|   |-sbin      非系统正常运行所需要的系统命令</span><br><span class="line">|   |-share     放置共享文件的地方，比如&#x2F;usr&#x2F;share&#x2F;man里存放帮助文件</span><br><span class="line">|   |-src       源码</span><br><span class="line">|-var           主要针对常态性变动的文件，包括缓存（cache）、log文件等</span><br></pre></td></tr></table></figure>
 
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>linux启动流程</title>
+    <url>/2020/04/12/linux%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/</url>
+    <content><![CDATA[<p>梳理linux的启动流程。</p>
+<a id="more"></a>
+
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">windows             linux</span><br><span class="line">    bios                bootloader(uboot)</span><br><span class="line">    | 启动              | 启动</span><br><span class="line">    windos              linux内核(内核、驱动)</span><br><span class="line">    | 识别              | 识别</span><br><span class="line">    c盘                 根文件系统(自带的app、我们的app)</span><br><span class="line">    | 运行              | 启动</span><br><span class="line">    app                 app</span><br></pre></td></tr></table></figure>
+<br>
 ]]></content>
       <categories>
         <category>linux</category>
