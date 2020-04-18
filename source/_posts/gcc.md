@@ -2,6 +2,7 @@
 title: gcc
 date: 2020-04-12 08:14:49
 tags:
+categories: 编译
 ---
 
 gcc的一些基础知识。

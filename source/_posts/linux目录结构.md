@@ -2,6 +2,7 @@
 title: linux目录结构
 date: 2020-04-12 06:51:11
 tags:
+categories: linux
 ---
 
 介绍linux的目录结构。

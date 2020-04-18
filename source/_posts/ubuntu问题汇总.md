@@ -2,6 +2,7 @@
 title: ubuntu问题汇总
 date: 2020-04-12 01:00:18
 tags:
+categories: linux
 ---
 
 记录常见的ubuntu使用过程中的问题，包括一些配置等。

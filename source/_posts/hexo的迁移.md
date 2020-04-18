@@ -2,6 +2,7 @@
 title: hexo的迁移
 date: 2020-04-06 04:45:55
 tags:
+categories: hexo
 ---
 由于hexo deploy的是编译生成的网页静态文件（hexo init下的.git_deploy）。
 当更换电脑，由于没有源文件，我们没法更新博文。

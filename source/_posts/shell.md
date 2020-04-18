@@ -2,6 +2,7 @@
 title: shell
 date: 2020-04-12 06:50:50
 tags:
+categories: linux
 ---
 
 记录shell的基本语法、常用的使用技巧等。

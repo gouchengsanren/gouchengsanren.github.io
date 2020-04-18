@@ -2,6 +2,7 @@
 title: man
 date: 2020-04-12 06:56:37
 tags:
+categories: linux
 ---
 
 记录man的基础知识，常用的指令、系统调用等等的说明。

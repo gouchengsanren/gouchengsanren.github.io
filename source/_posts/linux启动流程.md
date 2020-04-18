@@ -2,6 +2,7 @@
 title: linux启动流程
 date: 2020-04-12 06:56:52
 tags:
+categories: linux
 ---
 
 梳理linux的启动流程。
