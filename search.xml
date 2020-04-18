@@ -40,8 +40,8 @@
     <content><![CDATA[<p>gcc的一些基础知识。<br>编译到底做了一些什么，编译时的注意事项等等。</p>
 <a id="more"></a>
 
-<p><strong>头文件的位置</strong><br>像 <code>stdio.h</code> 在编译器中的 <code>include</code> 目录。<br>自己需要的头文件，编译时用 <code>-I</code> 指定，比如 <code>-I ./</code><br><br></p>
-<p><strong>库的位置</strong><br>像 <code>printf</code> 函数，都在事先编好的库中。库在编译器中的 <code>lib</code> 目录。<br>编译时，</p>
+<h2 id="头文件的位置"><a href="#头文件的位置" class="headerlink" title="头文件的位置"></a>头文件的位置</h2><p>像 <code>stdio.h</code> 在编译器中的 <code>include</code> 目录。<br>自己需要的头文件，编译时用 <code>-I</code> 指定，比如 <code>-I ./</code><br><br></p>
+<h2 id="库的位置"><a href="#库的位置" class="headerlink" title="库的位置"></a>库的位置</h2><p>像 <code>printf</code> 函数，都在事先编好的库中。库在编译器中的 <code>lib</code> 目录。<br>编译时，</p>
 <ul>
 <li>用 <code>-lxxx</code> 指定需要的库，编译器会去 <code>lib</code> 、 <code>usr/lib</code> 目录下找叫 <code>libxxx.so</code><br>或者 <code>libxxx.so.数字</code> 的库文件。</li>
 <li>用 <code>-L xxx</code> 指定库的路径。<br>
@@ -49,8 +49,160 @@
 
 </li>
 </ul>
-<p><strong>GCC的使用</strong><br>韦老师团队写的下面这篇文档非常好。<br><a href="https://github.com/100askTeam/01_all_series_quickstart/blob/master/04_%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8_%E6%AD%A3%E5%BC%8F%E5%BC%80%E5%A7%8B/01_%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/doc_pic/01.%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86.docx" target="_blank" rel="noopener">01.嵌入式Linux应用开发基础知识.docx</a></p>
+<h2 id="GCC的编译过程"><a href="#GCC的编译过程" class="headerlink" title="GCC的编译过程"></a>GCC的编译过程</h2><p>韦老师团队写的下面这篇文档非常好。<br><a href="https://github.com/100askTeam/01_all_series_quickstart/blob/master/04_%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8_%E6%AD%A3%E5%BC%8F%E5%BC%80%E5%A7%8B/01_%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/doc_pic/01.%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86.docx" target="_blank" rel="noopener">01.嵌入式Linux应用开发基础知识.docx</a></p>
 <p>最初的程序是程序员对着巨大的机器插拔线缆。<br>之后有了纸带打孔编程，指代上的洞代表01，一条纸带就是要给程序。<br>再之后，就用一段特定的代码来表示一段特定的01串。这就是汇编语言。<br>再往后，就出现了c等高级语言。</p>
+<p>对老师的文档做下摘要和总结。</p>
+<p>一个c/cpp文件的编译分为4步：</p>
+<ul>
+<li>1）预处理，preprocessing。</li>
+<li>2）编译，compilation。</li>
+<li>3）汇编，assembly。</li>
+<li>4）链接，linking。</li>
+</ul>
+<br>
+
+<h3 id="预处理"><a href="#预处理" class="headerlink" title="预处理"></a>预处理</h3><p>在c/cpp中，以 <code>#</code> 开头的都叫做 <code>预处理命令</code> ，包括 <code>#include</code> <code>#define</code> <code>#if</code> 等。<br>预处理要做的就是将它们展开或选择需要编译的代码。</p>
+<p>例：<br><code>gcc -E -o main.i main.c -I ./</code><br>预处理不加 <code>-o</code> 选项时，会以标准输出的形式打出来。<br>预处理，需要 <code>-I</code> 。一但 <code>.i</code> 文件生成了，后续的编译就不需要再指定 <code>-I</code> 了。<br><br></p>
+<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><p>代码决定后，正式将这些c/cpp代码转换成汇编代码。<br>用到的工具为 <code>cc1</code> 。</p>
+<p>例：<br><code>gcc -S main.i</code> 或者 <code>gcc -S -o main.s main.i</code><br>指不指定输出都可以。不指定，默认就是*.s。<br><br></p>
+<h3 id="汇编"><a href="#汇编" class="headerlink" title="汇编"></a>汇编</h3><p>汇编就是将汇编代码转换成机器码。<br>用到的工具为 <code>as</code> 。</p>
+<p>例：<br><code>gcc -c main.s</code> 或者 <code>gcc -c -o main.o main.s</code><br>指不指定输出都可以。不指定，默认就是*.o。<br><br></p>
+<h3 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h3><p>链接就是将多个 <code>.o文件</code> <code>.so文件</code> 链接起来，生成app。<br>用到的工具为 <code>ld</code> 或者 <code>collect2</code> 。</p>
+<p>例：<br><code>gcc -o main main.o sub.o</code><br>这里就必须指定了，否则默认生成的是 <code>a.out</code> 。<br><br></p>
+<h3 id="gcc-v"><a href="#gcc-v" class="headerlink" title="gcc -v"></a>gcc -v</h3><p>可以通过 <code>-v</code> 看到上述过程。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:~/bsp$ gcc -o main main.c sub.c -I ./ -v</span><br><span class="line">Using built-in specs.</span><br><span class="line">COLLECT_GCC=gcc</span><br><span class="line">COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper</span><br><span class="line">OFFLOAD_TARGET_NAMES=nvptx-none</span><br><span class="line">OFFLOAD_TARGET_DEFAULT=1</span><br><span class="line">Target: x86_64-linux-gnu</span><br><span class="line">Configured with: ../src/configure -v --with-pkgversion='Ubuntu 7.5.0-3ubuntu1~18.04' --with-bugurl=file:///usr/share/doc/gcc-7/README.Bugs --enable-languages=c,ada,c++,go,brig,d,fortran,objc,obj-c++ --prefix=/usr --with-gcc-major-version-only --program-suffix=-7 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-bootstrap --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-gnu-unique-object --disable-vtable-verify --enable-libmpx --enable-plugin --enable-default-pie --with-system-zlib --with-target-system-zlib --enable-objc-gc=auto --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu</span><br><span class="line">Thread model: posix</span><br><span class="line">gcc version 7.5.0 (Ubuntu 7.5.0-3ubuntu1~18.04) </span><br><span class="line">COLLECT_GCC_OPTIONS='-o' 'main' '-I' './' '-v' '-mtune=generic' '-march=x86-64'</span><br><span class="line"> /usr/lib/gcc/x86_64-linux-gnu/7/cc1 -quiet -v -I ./ -imultiarch x86_64-linux-gnu main.c -quiet -dumpbase main.c -mtune=generic -march=x86-64 -auxbase main -version -fstack-protector-strong -Wformat -Wformat-security -o /tmp/ccZkhzNQ.s</span><br><span class="line">GNU C11 (Ubuntu 7.5.0-3ubuntu1~18.04) version 7.5.0 (x86_64-linux-gnu)</span><br><span class="line">    compiled by GNU C version 7.5.0, GMP version 6.1.2, MPFR version 4.0.1, MPC version 1.1.0, isl version isl-0.19-GMP</span><br><span class="line"></span><br><span class="line">GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072</span><br><span class="line">ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"</span><br><span class="line">ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/7/../../../../x86_64-linux-gnu/include"</span><br><span class="line"><span class="meta">#</span><span class="bash">include <span class="string">"..."</span> search starts here:</span></span><br><span class="line"><span class="meta">#</span><span class="bash">include &lt;...&gt; search starts here:</span></span><br><span class="line"> ./</span><br><span class="line"> /usr/lib/gcc/x86_64-linux-gnu/7/include</span><br><span class="line"> /usr/local/include</span><br><span class="line"> /usr/lib/gcc/x86_64-linux-gnu/7/include-fixed</span><br><span class="line"> /usr/include/x86_64-linux-gnu</span><br><span class="line"> /usr/include</span><br><span class="line">End of search list.</span><br><span class="line">GNU C11 (Ubuntu 7.5.0-3ubuntu1~18.04) version 7.5.0 (x86_64-linux-gnu)</span><br><span class="line">    compiled by GNU C version 7.5.0, GMP version 6.1.2, MPFR version 4.0.1, MPC version 1.1.0, isl version isl-0.19-GMP</span><br><span class="line"></span><br><span class="line">GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072</span><br><span class="line">Compiler executable checksum: b62ed4a2880cd4159476ea8293b72fa8</span><br><span class="line">COLLECT_GCC_OPTIONS='-o' 'main' '-I' './' '-v' '-mtune=generic' '-march=x86-64'</span><br><span class="line"> as -v -I ./ --64 -o /tmp/cc3Tp9Or.o /tmp/ccZkhzNQ.s</span><br><span class="line">GNU assembler version 2.30 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.30</span><br><span class="line">COLLECT_GCC_OPTIONS='-o' 'main' '-I' './' '-v' '-mtune=generic' '-march=x86-64'</span><br><span class="line"> /usr/lib/gcc/x86_64-linux-gnu/7/cc1 -quiet -v -I ./ -imultiarch x86_64-linux-gnu sub.c -quiet -dumpbase sub.c -mtune=generic -march=x86-64 -auxbase sub -version -fstack-protector-strong -Wformat -Wformat-security -o /tmp/ccZkhzNQ.s</span><br><span class="line">GNU C11 (Ubuntu 7.5.0-3ubuntu1~18.04) version 7.5.0 (x86_64-linux-gnu)</span><br><span class="line">    compiled by GNU C version 7.5.0, GMP version 6.1.2, MPFR version 4.0.1, MPC version 1.1.0, isl version isl-0.19-GMP</span><br><span class="line"></span><br><span class="line">GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072</span><br><span class="line">ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"</span><br><span class="line">ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/7/../../../../x86_64-linux-gnu/include"</span><br><span class="line"><span class="meta">#</span><span class="bash">include <span class="string">"..."</span> search starts here:</span></span><br><span class="line"><span class="meta">#</span><span class="bash">include &lt;...&gt; search starts here:</span></span><br><span class="line"> ./</span><br><span class="line"> /usr/lib/gcc/x86_64-linux-gnu/7/include</span><br><span class="line"> /usr/local/include</span><br><span class="line"> /usr/lib/gcc/x86_64-linux-gnu/7/include-fixed</span><br><span class="line"> /usr/include/x86_64-linux-gnu</span><br><span class="line"> /usr/include</span><br><span class="line">End of search list.</span><br><span class="line">GNU C11 (Ubuntu 7.5.0-3ubuntu1~18.04) version 7.5.0 (x86_64-linux-gnu)</span><br><span class="line">    compiled by GNU C version 7.5.0, GMP version 6.1.2, MPFR version 4.0.1, MPC version 1.1.0, isl version isl-0.19-GMP</span><br><span class="line"></span><br><span class="line">GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072</span><br><span class="line">Compiler executable checksum: b62ed4a2880cd4159476ea8293b72fa8</span><br><span class="line">sub.c: In function ‘sub_fun’:</span><br><span class="line">sub.c:3:8: warning: implicit declaration of function ‘printf’ [-Wimplicit-function-declaration]</span><br><span class="line">        printf("Sub fun!\n");</span><br><span class="line">        ^~~~~~</span><br><span class="line">sub.c:3:8: warning: incompatible implicit declaration of built-in function ‘printf’</span><br><span class="line">sub.c:3:8: note: include ‘&lt;stdio.h&gt;’ or provide a declaration of ‘printf’</span><br><span class="line">COLLECT_GCC_OPTIONS='-o' 'main' '-I' './' '-v' '-mtune=generic' '-march=x86-64'</span><br><span class="line"> as -v -I ./ --64 -o /tmp/ccA3F0W2.o /tmp/ccZkhzNQ.s</span><br><span class="line">GNU assembler version 2.30 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.30</span><br><span class="line">COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/</span><br><span class="line">LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../:/lib/:/usr/lib/</span><br><span class="line">COLLECT_GCC_OPTIONS='-o' 'main' '-I' './' '-v' '-mtune=generic' '-march=x86-64'</span><br><span class="line"> /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccskUa6D.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o main /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. /tmp/cc3Tp9Or.o /tmp/ccA3F0W2.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o</span><br><span class="line">COLLECT_GCC_OPTIONS='-o' 'main' '-I' './' '-v' '-mtune=generic' '-march=x86-64'</span><br></pre></td></tr></table></figure>
+
+<p>可以清晰的看出编译的过程。<br>其中：<br><code>/usr/lib/gcc/x86_64-linux-gnu/7/cc1</code> 生成的 <code>.s</code> ， <code>as</code> 生成的 <code>.o</code> 都位于 <code>/tmp/</code> 目录下。<br>最终链接使用的是 <code>/usr/lib/gcc/x86_64-linux-gnu/7/collect2</code> 。<br><br></p>
+<h3 id="gcc-Wall"><a href="#gcc-Wall" class="headerlink" title="gcc -Wall"></a>gcc -Wall</h3><p>打开告警。<br><br></p>
+<h3 id="gcc-g"><a href="#gcc-g" class="headerlink" title="gcc -g"></a>gcc -g</h3><p>以操作系统的本地格式（stabs，COFF，XCOFF，或DWARF）产生调试信息，gdb能使用这些信息。<br>我们反汇编，也必须加上 <code>-g</code> ，否则没有函数信息，看不懂汇编的就会一脸懵逼。</p>
+<p>加上 <code>-g</code> 后，文件明显的就变大了。<br>例：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:~/bsp$ gcc -c main.c -I ./</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ ll</span><br><span class="line">total 28</span><br><span class="line">drwxrwxr-x  2 chuck chuck 4096 Apr 18 08:42 ./</span><br><span class="line">drwxr-xr-x 17 chuck chuck 4096 Apr 18 08:16 ../</span><br><span class="line">-rw-rw-r--  1 chuck chuck  153 Apr 12 12:52 main.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck 1608 Apr 18 08:42 main.o</span><br><span class="line">-rw-rw-r--  1 chuck chuck  139 Apr 12 12:51 Makefile</span><br><span class="line">-rw-rw-r--  1 chuck chuck   52 Apr 12 12:51 sub.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck   19 Apr 12 12:51 sub.h</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ gcc -c main.c -I ./ -g -o a.o</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ ll</span><br><span class="line">total 36</span><br><span class="line">drwxrwxr-x  2 chuck chuck 4096 Apr 18 08:43 ./</span><br><span class="line">drwxr-xr-x 17 chuck chuck 4096 Apr 18 08:16 ../</span><br><span class="line">-rw-rw-r--  1 chuck chuck 5992 Apr 18 08:43 a.o</span><br><span class="line">-rw-rw-r--  1 chuck chuck  153 Apr 12 12:52 main.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck 1608 Apr 18 08:42 main.o</span><br><span class="line">-rw-rw-r--  1 chuck chuck  139 Apr 12 12:51 Makefile</span><br><span class="line">-rw-rw-r--  1 chuck chuck   52 Apr 12 12:51 sub.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck   19 Apr 12 12:51 sub.h</span><br></pre></td></tr></table></figure>
+<br>
+
+
+<h3 id="gcc-O"><a href="#gcc-O" class="headerlink" title="gcc -O"></a>gcc -O</h3><p>优化选项。没有搞懂的欲望。</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-O</td>
+<td>不优化</td>
+</tr>
+<tr>
+<td>-O2</td>
+<td><strong>TODO</strong></td>
+</tr>
+<tr>
+<td>-O3</td>
+<td><strong>TODO</strong></td>
+</tr>
+</tbody></table>
+<p>例：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:~/bsp$ gcc -c main.c -I ./ -O2 -o main_o2.o</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ gcc -c main.c -I ./</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ gcc -c main.c -I ./ -O3 -o main_o3.o</span><br><span class="line">chuck@chuck11:~/bsp$ gcc -c main.c -I ./ -O1 -o main_o1.o</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ ll</span><br><span class="line">total 40</span><br><span class="line">drwxrwxr-x  2 chuck chuck 4096 Apr 18 08:50 ./</span><br><span class="line">drwxr-xr-x 17 chuck chuck 4096 Apr 18 08:16 ../</span><br><span class="line">-rw-rw-r--  1 chuck chuck  153 Apr 12 12:52 main.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck 1608 Apr 18 08:50 main.o</span><br><span class="line">-rw-rw-r--  1 chuck chuck 1624 Apr 18 08:50 main_o1.o</span><br><span class="line">-rw-rw-r--  1 chuck chuck 1728 Apr 18 08:50 main_o2.o</span><br><span class="line">-rw-rw-r--  1 chuck chuck 1728 Apr 18 08:50 main_o3.o</span><br><span class="line">-rw-rw-r--  1 chuck chuck  139 Apr 12 12:51 Makefile</span><br><span class="line">-rw-rw-r--  1 chuck chuck   52 Apr 12 12:51 sub.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck   19 Apr 12 12:51 sub.h</span><br></pre></td></tr></table></figure>
+<p>随着优化等级变高，代码变多了。<br><br></p>
+<h3 id="链接选项"><a href="#链接选项" class="headerlink" title="链接选项"></a>链接选项</h3><p>选项比较多，可以参考：<br><a href="https://github.com/100askTeam/01_all_series_quickstart/blob/master/04_%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8_%E6%AD%A3%E5%BC%8F%E5%BC%80%E5%A7%8B/01_%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/doc_pic/01.%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86.docx" target="_blank" rel="noopener">01.嵌入式Linux应用开发基础知识.docx</a></p>
+<h4 id="动态库和静态库"><a href="#动态库和静态库" class="headerlink" title="动态库和静态库"></a>动态库和静态库</h4><p>我们先来讲讲库。<br>库分：</p>
+<ul>
+<li>静态库， <code>.a</code> 文件</li>
+<li>动态库， <code>.so</code> 文件</li>
+</ul>
+<p><strong>动态库</strong><br>通过 <code>-shared</code> 选项生成 。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:~/bsp$ gcc -shared sub.c -o libsub.so</span><br><span class="line">chuck@chuck11:~/bsp$ gcc -o main main.c -I ./ -lsub -L ./</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ ./main </span><br><span class="line">./main: error while loading shared libraries: libsub.so: cannot open shared object file: No such file or directory</span><br><span class="line">chuck@chuck11:~/bsp$ ll main</span><br><span class="line">-rwxrwxr-x 1 chuck chuck 8328 Apr 18 17:50 main*</span><br></pre></td></tr></table></figure>
+<p>注意我故意列出了main的大小 <code>8328</code> 字节。</p>
+<p><strong>静态库</strong></p>
+<blockquote>
+<p>那么 <code>.a</code> 和 <code>.so</code> 是否仅仅是名字上的差别呢？</p>
+</blockquote>
+<p>我们来做个实验。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:~/bsp$ gcc -shared sub.c -o libsub.a</span><br><span class="line">chuck@chuck11:~/bsp$ ll</span><br><span class="line">total 40</span><br><span class="line">drwxrwxr-x  2 chuck chuck 4096 Apr 18 17:56 ./</span><br><span class="line">drwxr-xr-x 17 chuck chuck 4096 Apr 18 17:32 ../</span><br><span class="line">-rwxrwxr-x  1 chuck chuck 7896 Apr 18 17:56 libsub.a*</span><br><span class="line">-rwxrwxr-x  1 chuck chuck 7896 Apr 18 17:50 libsub.so*</span><br><span class="line">-rw-rw-r--  1 chuck chuck  153 Apr 12 12:52 main.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck  139 Apr 12 12:51 Makefile</span><br><span class="line">-rw-rw-r--  1 chuck chuck   52 Apr 12 12:51 sub.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck   19 Apr 12 12:51 sub.h</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ gcc -o main main.c -I ./ -lsub -L ./</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ ./main </span><br><span class="line">./main: error while loading shared libraries: libsub.so: cannot open shared object file: No such file or directory</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ rm libsub.so </span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ gcc -o main main.c -I ./ -lsub -L ./</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ ./main </span><br><span class="line">Main fun!</span><br><span class="line">Sub fun!</span><br><span class="line">chuck@chuck11:~/bsp$ ll main</span><br><span class="line">-rwxrwxr-x 1 chuck chuck 8328 Apr 18 17:56 main*</span><br><span class="line">chuck@chuck11:~/bsp$ diff libsub.a libsub.so</span><br><span class="line">chuck@chuck11:~/bsp$</span><br></pre></td></tr></table></figure>
+<p>会发现：</p>
+<ul>
+<li>1）使用 <code>-shared</code> 生成 <code>.a</code> 和 <code>.so</code> 内容是一样的</li>
+<li>2）链接，优先使用 <code>.so</code></li>
+<li>3）链接后，使用 <code>.a</code> 链接的main是可以直接运行的！！！</li>
+<li>4）<code>main</code> 的大小并没有差异，说明仍然是在运行时动态链接的</li>
+</ul>
+<p>我们继续实验：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:~/bsp$ cd ../</span><br><span class="line">chuck@chuck11:~$ </span><br><span class="line">chuck@chuck11:~$ cp bsp/main .</span><br><span class="line">chuck@chuck11:~$ </span><br><span class="line">chuck@chuck11:~$ ./main </span><br><span class="line">./main: error while loading shared libraries: .//libsub.a: cannot open shared object file: No such file or directory</span><br><span class="line">chuck@chuck11:~$ </span><br><span class="line">chuck@chuck11:~$ cp bsp/libsub.a .</span><br><span class="line">chuck@chuck11:~$ ./main </span><br><span class="line">Main fun!</span><br><span class="line">Sub fun!</span><br><span class="line">chuck@chuck11:~$</span><br></pre></td></tr></table></figure>
+<p>也就是说，链接 <code>.a</code> 的app运行时要求库在当前目录，而链接 <code>.so</code> 的app运行时要求库在 <code>lib</code> 目录。</p>
+<p>我们做下印证：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:~$ su</span><br><span class="line">Password: </span><br><span class="line">root@chuck11:/home/chuck# </span><br><span class="line">root@chuck11:/home/chuck# cp bsp/libsub.a /usr/lib/</span><br><span class="line">root@chuck11:/home/chuck# ./main </span><br><span class="line">./main: error while loading shared libraries: .//libsub.a: cannot open shared object file: No such file or directory</span><br><span class="line">root@chuck11:/home/chuck# cp bsp/libsub.so /usr/lib/</span><br><span class="line">root@chuck11:/home/chuck# ./main </span><br><span class="line">./main: error while loading shared libraries: .//libsub.a: cannot open shared object file: No such file or directory</span><br><span class="line">root@chuck11:/home/chuck#</span><br><span class="line">root@chuck11:/home/chuck# cd bsp/</span><br><span class="line">root@chuck11:/home/chuck/bsp# gcc -o main main.c -I ./ -L ./ -lsub</span><br><span class="line">root@chuck11:/home/chuck/bsp# </span><br><span class="line">root@chuck11:/home/chuck/bsp# ./main </span><br><span class="line">Main fun!</span><br><span class="line">Sub fun!</span><br></pre></td></tr></table></figure>
+<p>和预期一致。</p>
+<blockquote>
+<p>那么静态库正确的生成方法是？</p>
+</blockquote>
+<p>参考：<br><a href="http://c.biancheng.net/view/7168.html" target="_blank" rel="noopener">gcc生成静态链接库</a></p>
+<p>我们使用 <code>ar</code> 命令。<br><code>ar rcs + 静态库文件的名字 + 目标文件列表</code><br>事实上，ar是linux的一个备份压缩命令，它将多个文件打包成一个备份文件（归档文件），<br>反过来也可以提取。</p>
+<p>参数说明：</p>
+<ul>
+<li><code>r</code> 用来替换库中已有的目标文件，或者加入新的目标文件</li>
+<li><code>c</code> 表示创建一个库。不管库否存在，都将创建</li>
+<li><code>s</code> 用来创建目标文件索引，这在创建较大的库时能提高速度</li>
+</ul>
+<p>我们不需要记住每个参数的含义，记住使用 <code>ar rcs</code> 即可。<br>例：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:~/bsp$ gcc -c -o sub.o sub.c</span><br><span class="line">chuck@chuck11:~/bsp$ ar rcs libsub.a sub.o </span><br><span class="line">chuck@chuck11:~/bsp$ gcc -o main main.c -I ./ -L ./ -lsub</span><br><span class="line">chuck@chuck11:~/bsp$ ll</span><br><span class="line">total 44</span><br><span class="line">drwxrwxr-x  2 chuck chuck 4096 Apr 18 18:38 ./</span><br><span class="line">drwxr-xr-x 17 chuck chuck 4096 Apr 18 18:34 ../</span><br><span class="line">-rw-rw-r--  1 chuck chuck 1680 Apr 18 18:38 libsub.a</span><br><span class="line">-rwxrwxr-x  1 chuck chuck 8360 Apr 18 18:38 main*</span><br><span class="line">-rw-rw-r--  1 chuck chuck  153 Apr 12 12:52 main.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck  139 Apr 12 12:51 Makefile</span><br><span class="line">-rw-rw-r--  1 chuck chuck   52 Apr 12 12:51 sub.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck   19 Apr 12 12:51 sub.h</span><br><span class="line">-rw-rw-r--  1 chuck chuck 1536 Apr 18 18:38 sub.o</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ ./main </span><br><span class="line">Main fun!</span><br><span class="line">Sub fun!</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ cd ../</span><br><span class="line">chuck@chuck11:~$ cp bsp/main .</span><br><span class="line">chuck@chuck11:~$ ./main </span><br><span class="line">Main fun!</span><br><span class="line">Sub fun!</span><br><span class="line">chuck@chuck11:~$</span><br></pre></td></tr></table></figure>
+<p>不论哪个目录，<code>main</code> 都可以运行。而且大小相较动态库，变大了 <code>8360</code> 。<br>这才是静态库。</p>
+<blockquote>
+<p><em>注意：<code>ar</code> 打包的是归档文件，即 <code>.o</code> 文件，不能直接 <code>ar .c</code></em></p>
+</blockquote>
+<p>错误示范：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:~/bsp$ ar rcs -o libsub.a sub.c </span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ ll</span><br><span class="line">total 28</span><br><span class="line">drwxrwxr-x  2 chuck chuck 4096 Apr 18 18:43 ./</span><br><span class="line">drwxr-xr-x 17 chuck chuck 4096 Apr 18 18:42 ../</span><br><span class="line">-rw-rw-r--  1 chuck chuck  120 Apr 18 18:43 libsub.a</span><br><span class="line">-rw-rw-r--  1 chuck chuck  153 Apr 12 12:52 main.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck  139 Apr 12 12:51 Makefile</span><br><span class="line">-rw-rw-r--  1 chuck chuck   52 Apr 12 12:51 sub.c</span><br><span class="line">-rw-rw-r--  1 chuck chuck   19 Apr 12 12:51 sub.h</span><br><span class="line">chuck@chuck11:~/bsp$ </span><br><span class="line">chuck@chuck11:~/bsp$ gcc -o main main.c -I ./ -L ./ -lsub</span><br><span class="line">.//libsub.a: error adding symbols: Archive has no index; run ranlib to add one</span><br><span class="line">collect2: error: ld returned 1 exit status</span><br></pre></td></tr></table></figure>
+<p>可以发现，libsub.a很小。显然sub.c并没有被编译，记住ar只是一个打包命令，它不编译。<br><br></p>
+<h4 id="static"><a href="#static" class="headerlink" title="-static"></a>-static</h4><br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ]]></content>
       <categories>
         <category>编译</category>
