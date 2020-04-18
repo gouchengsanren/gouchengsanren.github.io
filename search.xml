@@ -18,6 +18,9 @@
 <p><strong>GCC的使用</strong><br>韦老师团队写的下面这篇文档非常好。<br><a href="https://github.com/100askTeam/01_all_series_quickstart/blob/master/04_%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8_%E6%AD%A3%E5%BC%8F%E5%BC%80%E5%A7%8B/01_%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/doc_pic/01.%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86.docx" target="_blank" rel="noopener">01.嵌入式Linux应用开发基础知识.docx</a></p>
 <p>最初的程序是程序员对着巨大的机器插拔线缆。<br>之后有了纸带打孔编程，指代上的洞代表01，一条纸带就是要给程序。<br>再之后，就用一段特定的代码来表示一段特定的01串。这就是汇编语言。<br>再往后，就出现了c等高级语言。</p>
 ]]></content>
+      <categories>
+        <category>编译</category>
+      </categories>
   </entry>
   <entry>
     <title>hexo的迁移</title>
@@ -49,6 +52,9 @@
 <h2 id="需要提交的内容"><a href="#需要提交的内容" class="headerlink" title="需要提交的内容"></a>需要提交的内容</h2><hr>
 <p>除了 <code>hexo d</code> 提交网页静态文件到 <code>master</code> 分支。<br>还需要 <code>git add</code> 和 <code>git push</code> 源文件到 <code>hexo</code> 分支。</p>
 ]]></content>
+      <categories>
+        <category>hexo</category>
+      </categories>
   </entry>
   <entry>
     <title>linux启动流程</title>
@@ -59,6 +65,9 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">windows             linux</span><br><span class="line">    bios                bootloader(uboot)</span><br><span class="line">    | 启动              | 启动</span><br><span class="line">    windos              linux内核(内核、驱动)</span><br><span class="line">    | 识别              | 识别</span><br><span class="line">    c盘                 根文件系统(自带的app、我们的app)</span><br><span class="line">    | 运行              | 启动</span><br><span class="line">    app                 app</span><br></pre></td></tr></table></figure>
 <br>
 ]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
   </entry>
   <entry>
     <title>linux目录结构</title>
@@ -69,6 +78,9 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">linux目录结构</span><br><span class="line">|-bin           基本命令，所有用户可使用（与开机有关，就是系统启动要用的）</span><br><span class="line">|-boot          启动文件，比如内核等</span><br><span class="line">|-dev           设备文件</span><br><span class="line">|-etc           配置文件</span><br><span class="line">|-home          家目录</span><br><span class="line">|-lib           库（&#x2F;bin &#x2F;sbin下的app用的库，&#x2F;usr&#x2F;bin &#x2F;usr&#x2F;sbin下的也可以放这里，没有限制）</span><br><span class="line">|-media         插上u盘等外设时会挂在到该目录</span><br><span class="line">|-mnt           用来挂在其他文件系统</span><br><span class="line">|-opt           可选程序</span><br><span class="line">|-proc          挂载虚拟的proc文件系统，可以查看各进程信息（proc，其实就是process，但现在</span><br><span class="line">                proc内容很多了</span><br><span class="line">|-root          root用户的家目录</span><br><span class="line">|-sbin          基本的系统命令，系统管理员才能使用（与开机有关，就是系统启动要用的）</span><br><span class="line">|-sys           用来挂载虚拟的sys文件系统，可查看系统信息</span><br><span class="line">|-tmp           临时目录，存放临时文件</span><br><span class="line">|-usr           unix software resource，存放可分享的与不可变动的数据（usr和var是一对，</span><br><span class="line">                usr的不可变动指开机后还在的。相对的，var是变动的，开机后就没了）</span><br><span class="line">|   |-bin       绝大部分用户可使用的指令（与开机无关）</span><br><span class="line">|   |-include   头文件</span><br><span class="line">|   |-lib       库</span><br><span class="line">|   |-local     系统管理员在本机自行安装、下载的软件</span><br><span class="line">|   |-sbin      非系统正常运行所需要的系统命令</span><br><span class="line">|   |-share     放置共享文件的地方，比如&#x2F;usr&#x2F;share&#x2F;man里存放帮助文件</span><br><span class="line">|   |-src       源码</span><br><span class="line">|-var           主要针对常态性变动的文件，包括缓存（cache）、log文件等</span><br></pre></td></tr></table></figure>
 
 ]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
   </entry>
   <entry>
     <title>man</title>
@@ -87,24 +99,9 @@
 </li>
 </ul>
 ]]></content>
-  </entry>
-  <entry>
-    <title>串口</title>
-    <url>/2020/04/12/%E4%B8%B2%E5%8F%A3/</url>
-    <content><![CDATA[<p>本post介绍所有的串口。如果后续发现内容过多，不便于浏览，会对内容做拆分。<br>uart、spi、i2c等各单独一个post。</p>
-<a id="more"></a>
-
-<p>串口电平有两种：TTL，RS232（传统的9针串口）。</p>
-]]></content>
-  </entry>
-  <entry>
-    <title>ubuntu问题汇总</title>
-    <url>/2020/04/12/ubuntu%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
-    <content><![CDATA[<p>记录常见的ubuntu使用过程中的问题，包括一些配置等。</p>
-<a id="more"></a>
-
-<h2 id="A-start-job-is-running-for-wait-for-network-to-be-Configured"><a href="#A-start-job-is-running-for-wait-for-network-to-be-Configured" class="headerlink" title="A start job is running for wait for network to be Configured"></a>A start job is running for wait for network to be Configured</h2><p>ubuntu 18.04<br>开机时会卡在这一步，原因应该是网络不通。<br>解决方式：<br><code>vim /etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service</code><br>在[Service]标签下增加：<br><code>TimeoutStartSec=2sec</code><br><br></p>
-]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
   </entry>
   <entry>
     <title>shell</title>
@@ -116,5 +113,32 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&gt;a1.c</span><br><span class="line">&gt;a2.c</span><br><span class="line">&gt;a3.c</span><br><span class="line"></span><br><span class="line">rm -rf !(a1*|a3*)</span><br></pre></td></tr></table></figure>
 <p>结果就是，保留了 <code>a1.c</code>、 <code>a3.c</code>，删除了 <code>a2.c</code> 。<br><br></p>
 ]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ubuntu问题汇总</title>
+    <url>/2020/04/12/ubuntu%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
+    <content><![CDATA[<p>记录常见的ubuntu使用过程中的问题，包括一些配置等。</p>
+<a id="more"></a>
+
+<h2 id="A-start-job-is-running-for-wait-for-network-to-be-Configured"><a href="#A-start-job-is-running-for-wait-for-network-to-be-Configured" class="headerlink" title="A start job is running for wait for network to be Configured"></a>A start job is running for wait for network to be Configured</h2><p>ubuntu 18.04<br>开机时会卡在这一步，原因应该是网络不通。<br>解决方式：<br><code>vim /etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service</code><br>在[Service]标签下增加：<br><code>TimeoutStartSec=2sec</code><br><br></p>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>串口</title>
+    <url>/2020/04/12/%E4%B8%B2%E5%8F%A3/</url>
+    <content><![CDATA[<p>本post介绍所有的串口。如果后续发现内容过多，不便于浏览，会对内容做拆分。<br>uart、spi、i2c等各单独一个post。</p>
+<a id="more"></a>
+
+<p>串口电平有两种：TTL，RS232（传统的9针串口）。</p>
+]]></content>
+      <categories>
+        <category>bsp</category>
+      </categories>
   </entry>
 </search>
