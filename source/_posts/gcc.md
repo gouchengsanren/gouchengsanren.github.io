@@ -18,7 +18,7 @@ gcc的一些基础知识。
 像 `printf` 函数，都在事先编好的库中。库在编译器中的 `lib` 目录。
 编译时，
 * 用 `-lxxx` 指定需要的库，编译器会去 `lib` 、 `usr/lib` 目录下找叫 `libxxx.so`
-或者 `libxxx.so.数字` 的库文件。
+ `libxxx.so.数字` `libxxx.a` 的库文件。
 * 用 `-L xxx` 指定库的路径。
 <br>
 <br>
@@ -259,6 +259,7 @@ chuck@chuck11:~/bsp$ ll main
 -rwxrwxr-x 1 chuck chuck 8328 Apr 18 17:50 main*
 ```
 注意我故意列出了main的大小 `8328` 字节。
+*`-shared` 不加 `-o` 默认生成的文件为 `a.out` ，所以一定要加 `-o` ，否则没法链接的。*
 
 **静态库**
 > 那么 `.a` 和 `.so` 是否仅仅是名字上的差别呢？
@@ -407,53 +408,120 @@ chuck@chuck11:~/bsp$ gcc -o main main.c -I ./ -L ./ -lsub
 collect2: error: ld returned 1 exit status
 ```
 可以发现，libsub.a很小。显然sub.c并没有被编译，记住ar只是一个打包命令，它不编译。
-<br>
+> 也就是说，**静态库**只是 `.o` 的打包文件而已，它不想 `.so` 那样加了其他内容。
 
+<br>
 
 
 #### -static
+> 那么除了静态库，有什么办法可以把动态库直接编译进app呢？
+
+有。使用 `-static` 选项。
+该选项在编译时会直接把库编译进app。
+
+例：
+```shell
+chuck@chuck11:~/bsp$ ll
+total 32
+drwxrwxr-x  2 chuck chuck 4096 Apr 19 01:08 ./
+drwxr-xr-x 17 chuck chuck 4096 Apr 18 18:51 ../
+-rwxrwxr-x  1 chuck chuck 7896 Apr 19 01:06 libsub.so*
+-rw-rw-r--  1 chuck chuck  153 Apr 12 12:52 main.c
+-rw-rw-r--  1 chuck chuck  139 Apr 12 12:51 Makefile
+-rw-rw-r--  1 chuck chuck   52 Apr 12 12:51 sub.c
+-rw-rw-r--  1 chuck chuck   19 Apr 12 12:51 sub.h
+chuck@chuck11:~/bsp$ 
+chuck@chuck11:~/bsp$ gcc -static -o main main.c -I ./ -L ./ -lsub
+/usr/bin/ld: cannot find -lsub
+collect2: error: ld returned 1 exit status
+chuck@chuck11:~/bsp$ 
+chuck@chuck11:~/bsp$ gcc -c sub.c 
+chuck@chuck11:~/bsp$ ar rcs -o libsub.a sub.o 
+chuck@chuck11:~/bsp$ gcc -static -o main main.c -I ./ -L ./ -lsub
+chuck@chuck11:~/bsp$ 
+chuck@chuck11:~/bsp$ ll
+total 868
+drwxrwxr-x  2 chuck chuck   4096 Apr 19 01:12 ./
+drwxr-xr-x 17 chuck chuck   4096 Apr 18 18:51 ../
+-rw-rw-r--  1 chuck chuck   1680 Apr 19 01:12 libsub.a
+-rwxrwxr-x  1 chuck chuck   7896 Apr 19 01:06 libsub.so*
+-rwxrwxr-x  1 chuck chuck 844760 Apr 19 01:13 main*
+-rw-rw-r--  1 chuck chuck    153 Apr 12 12:52 main.c
+-rw-rw-r--  1 chuck chuck    139 Apr 12 12:51 Makefile
+-rw-rw-r--  1 chuck chuck     52 Apr 12 12:51 sub.c
+-rw-rw-r--  1 chuck chuck     19 Apr 12 12:51 sub.h
+-rw-rw-r--  1 chuck chuck   1536 Apr 19 01:10 sub.o
+chuck@chuck11:~/bsp$
+```
+我做了2个尝试：
+* 1）尝试用 `-static` 编译进自己的 `libsub.so` 库，但失败了。实践表明不能通过
+     `-static` 将自己的动态库编译进app。
+* 2）编出 `.a` 静态库，使用 `-static` 成功了。说明自己的静态库可以。
+
+*注意，编出的main有 `844k`*
+
+> 难道 `libc` 默认库是静态库？不可能啊，如果是静态库，为什么现在main编出来大了整整 `100倍` ？
+
+我们可以通过 `ldd` 确认一个app到底使用了那些库：
+参考：
+[ldd](http://c.biancheng.net/view/7483.html)
+
+```shell
+chuck@chuck11:~/bsp$ gcc -static -o main_static main.c -I ./ -L ./ -lsub
+chuck@chuck11:~/bsp$ gcc -o main_dynamic main.c -I ./ -L ./ -lsub
+chuck@chuck11:~/bsp$ ll
+total 880
+drwxrwxr-x  2 chuck chuck   4096 Apr 19 01:16 ./
+drwxr-xr-x 17 chuck chuck   4096 Apr 18 18:51 ../
+-rw-rw-r--  1 chuck chuck   1680 Apr 19 01:12 libsub.a
+-rwxrwxr-x  1 chuck chuck   7896 Apr 19 01:06 libsub.so*
+-rw-rw-r--  1 chuck chuck    153 Apr 12 12:52 main.c
+-rwxrwxr-x  1 chuck chuck   8328 Apr 19 01:16 main_dynamic*
+-rwxrwxr-x  1 chuck chuck 844760 Apr 19 01:16 main_static*
+-rw-rw-r--  1 chuck chuck    139 Apr 12 12:51 Makefile
+-rw-rw-r--  1 chuck chuck     52 Apr 12 12:51 sub.c
+-rw-rw-r--  1 chuck chuck     19 Apr 12 12:51 sub.h
+-rw-rw-r--  1 chuck chuck   1536 Apr 19 01:10 sub.o
+chuck@chuck11:~/bsp$ 
+chuck@chuck11:~/bsp$ ldd main_static 
+    not a dynamic executable
+chuck@chuck11:~/bsp$ 
+chuck@chuck11:~/bsp$ ldd main_dynamic 
+    linux-vdso.so.1 (0x00007fffbe917000)
+    libsub.so => not found
+    libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fbc7afeb000)
+    /lib64/ld-linux-x86-64.so.2 (0x00007fbc7b5de000)
+```
+我编了两个main，一个静态的（ `main_static` ），一个动态的（ `main_dynamic` ）。
+使用 `ldd` 查看，非 `-static` 生成的main，使用的c库是 `libc.so.6` 确实是动态库。
+
+> 那自己的so和标准库的so，有什么区别呢？
+
+我们通过 `file` 看下文件类型：
+```shell
+chuck@chuck11:~/bsp$ file libsub.so 
+libsub.so: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, BuildID[sha1]=e4d3fd11a9247f7c75680cc54340daf8b58f4cc8, not stripped
+chuck@chuck11:~/bsp$ 
+chuck@chuck11:~/bsp$ file libsub.a 
+libsub.a: current ar archive
+chuck@chuck11:~/bsp$ 
+chuck@chuck11:~/bsp$ sudo file /lib/x86_64-linux-gnu/libc.so.6 
+[sudo] password for chuck: 
+/lib/x86_64-linux-gnu/libc.so.6: symbolic link to libc-2.27.so
+chuck@chuck11:~/bsp$ 
+chuck@chuck11:~/bsp$ su
+Password: 
+root@chuck11:/home/chuck/bsp# whereis libc-2.27.so
+libc-2.27: /lib/x86_64-linux-gnu/libc-2.27.so
+root@chuck11:/home/chuck/bsp# 
+root@chuck11:/home/chuck/bsp# file /lib/x86_64-linux-gnu/libc-2.27.so
+/lib/x86_64-linux-gnu/libc-2.27.so: ELF 64-bit LSB shared object, x86-64, version 1 (GNU/Linux), dynamically linked, interpreter /lib64/l, BuildID[sha1]=b417c0ba7cc5cf06d1d1bed6652cedb9253c60d0, for GNU/Linux 3.2.0, stripped
+```
+除了自己的是没有去符号的，没有什么区别。
+> 总之，实践表明：自己的库，要想 `-static` 编进app，只能通过ar打包为静态库。
+
+> 至于 `strip` 工具，我们另开篇讲。本身不在gcc的范畴。
 <br>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
