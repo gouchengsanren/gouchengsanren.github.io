@@ -312,7 +312,55 @@ makefile:1: /home/chuck/bsp/a
 aaa
 make[1]: Leaving directory '/home/chuck/bsp/a'
 ```
+<br>
 
+
+## 通用makefile
+参考韦老师的通用makefile写了一个。
+[通用makefile](https://github.com/gouchengsanren/files/tree/master/general_makefile)
+
+简单说两句。
+目录结构：
+```shell
+.
+├── a.c
+├── include
+│   ├── a.h
+│   └── sub_a.h
+├── main.c
+├── makefile                    //当前目录makefile
+├── makefile.build              //会去包含当前目录的makefile
+└── sub
+    ├── makefile                //当前目录makefile，当然对于根目录，它是字目录
+    └── sub_a.c
+```
+
+学到1点：
+* 目标永远是在make读完所有配置后才去执行，目标写前面也不会先执行
+
+执行：
+```shell
+chuck@chuck11:general_makefile$ make
+make -C ./ -f /home/chuck/github/gouchengsanren/files/general_makefile/makefile.build
+make[1]: Entering directory '/home/chuck/github/gouchengsanren/files/general_makefile'
+make -C sub -f /home/chuck/github/gouchengsanren/files/general_makefile/makefile.build
+make[2]: Entering directory '/home/chuck/github/gouchengsanren/files/general_makefile/sub'
+gcc -Wall -O2 -g -I /home/chuck/github/gouchengsanren/files/general_makefile/include -D DEBUG -D SUBA_VAL=10 -Wp,-MD,.sub_a.o.d -c -o sub_a.o sub_a.c
+ld -r -o built-in.o sub_a.o
+make[2]: Leaving directory '/home/chuck/github/gouchengsanren/files/general_makefile/sub'
+gcc -Wall -O2 -g -I /home/chuck/github/gouchengsanren/files/general_makefile/include   -Wp,-MD,.main.o.d -c -o main.o main.c
+gcc -Wall -O2 -g -I /home/chuck/github/gouchengsanren/files/general_makefile/include   -Wp,-MD,.a.o.d -c -o a.o a.c
+ld -r -o built-in.o main.o a.o sub/built-in.o
+make[1]: Leaving directory '/home/chuck/github/gouchengsanren/files/general_makefile'
+gcc -o app built-in.o 
+app has been built!
+```
+过程：
+* 1）编译app，build-in.o
+* 2）build-in.o，需要sub/build-in.o main.o a.o
+* 3）对于sub/build-in.o，它因为没有子目录，所以只需要sub_a.o
+
+思想很简单，makefile不好写。
 
 
 
