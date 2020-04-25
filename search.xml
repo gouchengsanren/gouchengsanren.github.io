@@ -457,14 +457,26 @@
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">1 $(warning $(shell pwd))    </span><br><span class="line">2 </span><br><span class="line">3 b:</span><br><span class="line">4     #make -f ../a/makefile</span><br><span class="line">5     make -C ../a/</span><br></pre></td></tr></table></figure>
 <p>执行：</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:b$ make</span><br><span class="line">makefile:1: /home/chuck/bsp/b</span><br><span class="line"><span class="meta">#</span><span class="bash">make -f ../a/makefile</span></span><br><span class="line">make -C ../a/</span><br><span class="line">make[1]: Entering directory '/home/chuck/bsp/a'     //目录变了，执行-C的效果和cd到a目录，再执行</span><br><span class="line">                                                      make效果是一样的。</span><br><span class="line">makefile:1: /home/chuck/bsp/a</span><br><span class="line">aaa</span><br><span class="line">make[1]: Leaving directory '/home/chuck/bsp/a'</span><br></pre></td></tr></table></figure>
+<br>
 
 
+<h2 id="通用makefile"><a href="#通用makefile" class="headerlink" title="通用makefile"></a>通用makefile</h2><p>参考韦老师的通用makefile写了一个。<br><a href="https://github.com/gouchengsanren/files/tree/master/general_makefile" target="_blank" rel="noopener">通用makefile</a></p>
+<p>简单说两句。<br>目录结构：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── a.c</span><br><span class="line">├── include</span><br><span class="line">│   ├── a.h</span><br><span class="line">│   └── sub_a.h</span><br><span class="line">├── main.c</span><br><span class="line">├── makefile                    //当前目录makefile</span><br><span class="line">├── makefile.build              //会去包含当前目录的makefile</span><br><span class="line">└── sub</span><br><span class="line">    ├── makefile                //当前目录makefile，当然对于根目录，它是字目录</span><br><span class="line">    └── sub_a.c</span><br></pre></td></tr></table></figure>
 
-
-
-
-
-
+<p>学到1点：</p>
+<ul>
+<li>目标永远是在make读完所有配置后才去执行，目标写前面也不会先执行</li>
+</ul>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:general_makefile$ make</span><br><span class="line">make -C ./ -f /home/chuck/github/gouchengsanren/files/general_makefile/makefile.build</span><br><span class="line">make[1]: Entering directory '/home/chuck/github/gouchengsanren/files/general_makefile'</span><br><span class="line">make -C sub -f /home/chuck/github/gouchengsanren/files/general_makefile/makefile.build</span><br><span class="line">make[2]: Entering directory '/home/chuck/github/gouchengsanren/files/general_makefile/sub'</span><br><span class="line">gcc -Wall -O2 -g -I /home/chuck/github/gouchengsanren/files/general_makefile/include -D DEBUG -D SUBA_VAL=10 -Wp,-MD,.sub_a.o.d -c -o sub_a.o sub_a.c</span><br><span class="line">ld -r -o built-in.o sub_a.o</span><br><span class="line">make[2]: Leaving directory '/home/chuck/github/gouchengsanren/files/general_makefile/sub'</span><br><span class="line">gcc -Wall -O2 -g -I /home/chuck/github/gouchengsanren/files/general_makefile/include   -Wp,-MD,.main.o.d -c -o main.o main.c</span><br><span class="line">gcc -Wall -O2 -g -I /home/chuck/github/gouchengsanren/files/general_makefile/include   -Wp,-MD,.a.o.d -c -o a.o a.c</span><br><span class="line">ld -r -o built-in.o main.o a.o sub/built-in.o</span><br><span class="line">make[1]: Leaving directory '/home/chuck/github/gouchengsanren/files/general_makefile'</span><br><span class="line">gcc -o app built-in.o </span><br><span class="line">app has been built!</span><br></pre></td></tr></table></figure>
+<p>过程：</p>
+<ul>
+<li>1）编译app，build-in.o</li>
+<li>2）build-in.o，需要sub/build-in.o main.o a.o</li>
+<li>3）对于sub/build-in.o，它因为没有子目录，所以只需要sub_a.o</li>
+</ul>
+<p>思想很简单，makefile不好写。</p>
 ]]></content>
       <categories>
         <category>compile</category>
