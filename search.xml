@@ -361,7 +361,55 @@
 
 </li>
 </ul>
-<h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><p><font color=red size=4>[TODO]</font><br><br></p>
+<h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><h3 id="延时变量和即时变量"><a href="#延时变量和即时变量" class="headerlink" title="延时变量和即时变量"></a>延时变量和即时变量</h3><p>makefile中的赋值分为两种：</p>
+<ul>
+<li>1）延时变量；<br>   在执行时才确定。</li>
+<li>2）即时变量；<br>   立即确定。</li>
+</ul>
+<p>例：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">a'makefile:</span><br><span class="line">  1 VAR = $@</span><br><span class="line">  2 VAR2 := $@</span><br><span class="line">  3 $(warning '$(VAR)','$(VAR2)')</span><br><span class="line">  4                      </span><br><span class="line">  5 a:                   </span><br><span class="line">  6     @echo \'$(VAR)\',\'$(VAR2)\'</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:a$ make</span><br><span class="line">makefile:3: '',''</span><br><span class="line">'a',''</span><br></pre></td></tr></table></figure>
+<p><code>VAR</code> 是延时变量，在执行命令时才确定。<br><code>VAR2</code> 是即时变量，写时是多少就是多少。</p>
+<blockquote>
+<p>那么gnu make是怎么规定哪些是延时变量，哪些是即时变量呢？</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>举例</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>VAR = xxx</td>
+<td>延时变量</td>
+</tr>
+<tr>
+<td>VAR ?= xxx</td>
+<td>延时变量</td>
+</tr>
+<tr>
+<td>VAR := xxx</td>
+<td>即时变量</td>
+</tr>
+<tr>
+<td>VAR += xxx</td>
+<td>跟随原有定义，如果原来VAR是延时变量，那么现在还是延时变量，否则还是即时变量</td>
+</tr>
+</tbody></table>
+<h3 id="变量的导出（export）"><a href="#变量的导出（export）" class="headerlink" title="变量的导出（export）"></a>变量的导出（export）</h3><p>我们在编译时，目录通常是切来切去的（通过make -C）。<br><em>注：</em><br><em>关于 <code>-C</code> ，请参考<a href="#ARCHOR_参数">参数</a>一节</em><br>一个makefile里的变量是没法在其他makefile中使用的，如果要使用，就要用 <code>export</code> 将它导出。</p>
+<p>例：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">├── a</span><br><span class="line">│   └── makefile</span><br><span class="line">├── b</span><br><span class="line">│   └── makefile</span><br><span class="line"></span><br><span class="line">a's makefile:</span><br><span class="line">  1 a:</span><br><span class="line">  2     @echo \'$(VAR)\'</span><br><span class="line"></span><br><span class="line">b's makefile:</span><br><span class="line">  1 VAR ?= iamvar</span><br><span class="line">  2 </span><br><span class="line">  3 b:</span><br><span class="line">  4     make -C ../a/</span><br></pre></td></tr></table></figure>
+<p>b目录下执行make：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:b$ make</span><br><span class="line">make -C ../a/</span><br><span class="line">make[1]: Entering directory '/home/chuck/bsp/a'</span><br><span class="line">''</span><br><span class="line">make[1]: Leaving directory '/home/chuck/bsp/a'</span><br></pre></td></tr></table></figure>
+<p>修改b makefile，将 <code>VAR</code> 导出：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">1 VAR ?= iamvar</span><br><span class="line">2 export VAR</span><br><span class="line">3 </span><br><span class="line">4 b:</span><br><span class="line">5     make -C ../a/</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:b$ make</span><br><span class="line">make -C ../a</span><br><span class="line">make[1]: Entering directory '/home/chuck/bsp/a'</span><br><span class="line">'iamvar'</span><br><span class="line">make[1]: Leaving directory '/home/chuck/bsp/a'</span><br></pre></td></tr></table></figure>
+<br>
+
+
 <h2 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h2><p>介绍makefile中常用的函数。</p>
 <h3 id="foreach"><a href="#foreach" class="headerlink" title="foreach"></a>foreach</h3><p><code>$(foreach i, list, newi)</code><br>遍历 <code>list</code> 中的每一项元素（<code>i</code>），将其改成 <code>newi</code> 的形式。</p>
 <h3 id="wildcard"><a href="#wildcard" class="headerlink" title="wildcard"></a>wildcard</h3><p><code>$(wildcard pattern)</code><br>把符合 <code>pattern</code> 描述的文件都列出来。<br>pattern可以是切实的文件：</p>
@@ -369,7 +417,34 @@
 <p>也可以是通配符：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">a &#x3D; $(wildcard *.c)</span><br></pre></td></tr></table></figure>
 
-<h2 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h2><h3 id="make-f"><a href="#make-f" class="headerlink" title="make -f"></a>make -f</h3><p><code>-f</code> 选项用来指定makefile。<br>默认情况下，是使用当前目录下的makefile。<br>例：</p>
+<h3 id="shell"><a href="#shell" class="headerlink" title="shell"></a>shell</h3><p><code>$(shell xxx)</code></p>
+<h3 id="filter-filter-out"><a href="#filter-filter-out" class="headerlink" title="filter / filter-out"></a>filter / filter-out</h3><h4 id="filter"><a href="#filter" class="headerlink" title="filter"></a>filter</h4><p><code>$(filter pattern, xxx)</code><br>把xxx中符合pattern的<font color=red><strong>过滤出来</strong></font>。</p>
+<p>例：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">1 obj-y := a.o b.o c/ d/</span><br><span class="line">2 DIR := $(filter %/, $(obj-y))</span><br><span class="line">3 NDIR := $(filter-out %/, $(obj-y))</span><br><span class="line">4 </span><br><span class="line">5 a:</span><br><span class="line">6     @echo $(DIR)</span><br><span class="line">7     @echo $(NDIR)</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:a$ make</span><br><span class="line">c/ d/</span><br><span class="line">a.o b.o</span><br></pre></td></tr></table></figure>
+
+<h4 id="filter-out"><a href="#filter-out" class="headerlink" title="filter-out"></a>filter-out</h4><p><code>$(filter-out pattern, xxx)</code><br>把xxx中符合pattern的<font color=red><strong>过滤掉</strong></font>。</p>
+<h3 id="patsubst"><a href="#patsubst" class="headerlink" title="patsubst"></a>patsubst</h3><p><code>$(patsubst pattern, replacement, xxx)</code><br>把xxx中符合pattern的替换成replacement。<br>patsubst这个名字不好记。</p>
+<p>例：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">1 obj-y := a.c b.o c/ d/</span><br><span class="line">2 VAR := $(patsubst %/, %, $(obj-y))</span><br><span class="line">3 VAR := $(patsubst %.c, %.o, $(VAR))</span><br><span class="line">4                              </span><br><span class="line">5 a:</span><br><span class="line">6     @echo $(VAR)</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:a$ make</span><br><span class="line">a.o b.o c d</span><br></pre></td></tr></table></figure>
+<br>
+
+
+<h2 id="假目标（-PHONY）"><a href="#假目标（-PHONY）" class="headerlink" title="假目标（.PHONY）"></a>假目标（.PHONY）</h2><p>我们makefile中会有写 <code>clean</code> 目标，用来清除编译环境。<br>如果目录下恰巧有一个 <code>clean文件</code> ，那么make就会不执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">b's makefile:</span><br><span class="line">  1 VAR ?= iamvar</span><br><span class="line">  2 export VAR</span><br><span class="line">  3 </span><br><span class="line">  4 b:</span><br><span class="line">  5     make -C ../a/</span><br><span class="line">  6 </span><br><span class="line">  7 clean:</span><br><span class="line">  8     @echo "clean"</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:b$ &gt;clean</span><br><span class="line">chuck@chuck11:b$ make clean</span><br><span class="line">make: 'clean' is up to date.</span><br></pre></td></tr></table></figure>
+<p>这种情况，我们需要告诉make，这个target指定时，一定要被执行。<br>使用 <code>.PHONY</code> （phony的意思是‘假的’）:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"> 1 VAR ?= iamvar</span><br><span class="line"> 2 export VAR</span><br><span class="line"> 3 </span><br><span class="line"> 4 .PHONY: clean               //指定哪些是虚假目标</span><br><span class="line"> 5        </span><br><span class="line"> 6 b:</span><br><span class="line"> 7     make -C ../a/</span><br><span class="line"> 8 </span><br><span class="line"> 9 clean:</span><br><span class="line">10     @echo "clean"</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:b$ make clean</span><br><span class="line">clean</span><br></pre></td></tr></table></figure>
+<br>
+
+
+<h2 id="参数"><a href="#参数" class="headerlink" title="参数"></a><a name="ARCHOR_参数">参数</a></h2><h3 id="make-f"><a href="#make-f" class="headerlink" title="make -f"></a>make -f</h3><p><code>-f</code> 选项用来指定makefile。<br>默认情况下，是使用当前目录下的makefile。<br>例：</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">├── a</span><br><span class="line">│   └── makefile</span><br><span class="line">├── b</span><br><span class="line">│   └── makefile</span><br><span class="line"></span><br><span class="line">a's makefile:</span><br><span class="line">  1 $(warning $(shell pwd))</span><br><span class="line"></span><br><span class="line">b's makefile:</span><br><span class="line">  1 $(warning $(shell pwd))    </span><br><span class="line">  2 </span><br><span class="line">  3 b:</span><br><span class="line">  4     make -f ../a/makefile</span><br></pre></td></tr></table></figure>
 <p>执行：</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:b$ make</span><br><span class="line">makefile:1: /home/chuck/bsp/b                   //打出了b makefile warning</span><br><span class="line">make -f ../a/makefile                           //执行第一个target</span><br><span class="line">make[1]: Entering directory '/home/chuck/bsp/b' //进入b目录</span><br><span class="line">../a/makefile:1: /home/chuck/bsp/b              //使用a makefile，a makefile warning打出，</span><br><span class="line">                                                  因为当前目录是b，所以打出的是b目录</span><br><span class="line">make[1]: *** No targets.  Stop.</span><br><span class="line">make[1]: Leaving directory '/home/chuck/bsp/b'</span><br><span class="line">makefile:4: recipe for target 'b' failed</span><br><span class="line">make: *** [b] Error 2</span><br></pre></td></tr></table></figure>
