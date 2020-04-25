@@ -190,7 +190,7 @@
 </blockquote>
 ]]></content>
       <categories>
-        <category>编译</category>
+        <category>compile</category>
       </categories>
   </entry>
   <entry>
@@ -342,6 +342,57 @@
 ]]></content>
       <categories>
         <category>tools</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>makefile</title>
+    <url>/2020/04/24/makefile/</url>
+    <content><![CDATA[<p>介绍makefile的语法等。</p>
+<a id="more"></a>
+
+<h2 id="GNUMAKE"><a href="#GNUMAKE" class="headerlink" title="GNUMAKE"></a>GNUMAKE</h2><p>大佬给我们翻译了make使用手册，非常感谢。<br><a href="https://github.com/gouchengsanren/files/blob/master/gunmake.htm" target="_blank" rel="noopener">gnumake</a>(下载后浏览器打开)<br>下面会介绍常用语法。<br><br></p>
+<h2 id="规则"><a href="#规则" class="headerlink" title="规则"></a>规则</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">目标（target）：依赖（prerequiries）</span><br><span class="line">&lt;tab&gt;命令（command）</span><br></pre></td></tr></table></figure>
+<p>make的思想简单粗暴：<br><code>目标</code> 文件还没有，或者 <code>依赖</code> 文件有更新，就执行 <code>命令</code> 。<br><em>所以，make并不是一个编译工具，所有符合上述使用场景的，都可以使用make。<br>只是我们项目中的make都用来编译了，让我们误以为make只能用来编译。</em></p>
+<p>Note：</p>
+<ul>
+<li>我们make常常遇到莫名的错误，先检查格式问题，<code>tab</code> 是否对，有没有错误的<br>以 <code>tab</code> 打头的空行等等</li>
+<li><code>make</code> 会用 <code>shell</code> 执行 <code>command</code> 。所以command必须是手动在shell下执行<br>没有问题的。<br>
+
+
+</li>
+</ul>
+<h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><p><font color=red size=4>[TODO]</font><br><br></p>
+<h2 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h2><p>介绍makefile中常用的函数。</p>
+<h3 id="foreach"><a href="#foreach" class="headerlink" title="foreach"></a>foreach</h3><p><code>$(foreach i, list, newi)</code><br>遍历 <code>list</code> 中的每一项元素（<code>i</code>），将其改成 <code>newi</code> 的形式。</p>
+<h3 id="wildcard"><a href="#wildcard" class="headerlink" title="wildcard"></a>wildcard</h3><p><code>$(wildcard pattern)</code><br>把符合 <code>pattern</code> 描述的文件都列出来。<br>pattern可以是切实的文件：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">a &#x3D; $(wildcard a)</span><br><span class="line">检查a是否存在，存在还是a（它自己），不存在就是空。</span><br><span class="line">这里的a也可以是列表。</span><br></pre></td></tr></table></figure>
+<p>也可以是通配符：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">a &#x3D; $(wildcard *.c)</span><br></pre></td></tr></table></figure>
+
+<h2 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h2><h3 id="make-f"><a href="#make-f" class="headerlink" title="make -f"></a>make -f</h3><p><code>-f</code> 选项用来指定makefile。<br>默认情况下，是使用当前目录下的makefile。<br>例：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">├── a</span><br><span class="line">│   └── makefile</span><br><span class="line">├── b</span><br><span class="line">│   └── makefile</span><br><span class="line"></span><br><span class="line">a's makefile:</span><br><span class="line">  1 $(warning $(shell pwd))</span><br><span class="line"></span><br><span class="line">b's makefile:</span><br><span class="line">  1 $(warning $(shell pwd))    </span><br><span class="line">  2 </span><br><span class="line">  3 b:</span><br><span class="line">  4     make -f ../a/makefile</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:b$ make</span><br><span class="line">makefile:1: /home/chuck/bsp/b                   //打出了b makefile warning</span><br><span class="line">make -f ../a/makefile                           //执行第一个target</span><br><span class="line">make[1]: Entering directory '/home/chuck/bsp/b' //进入b目录</span><br><span class="line">../a/makefile:1: /home/chuck/bsp/b              //使用a makefile，a makefile warning打出，</span><br><span class="line">                                                  因为当前目录是b，所以打出的是b目录</span><br><span class="line">make[1]: *** No targets.  Stop.</span><br><span class="line">make[1]: Leaving directory '/home/chuck/bsp/b'</span><br><span class="line">makefile:4: recipe for target 'b' failed</span><br><span class="line">make: *** [b] Error 2</span><br></pre></td></tr></table></figure>
+<p>我们给a makefile加2个目标：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">1 $(warning $(shell pwd))    </span><br><span class="line">2 </span><br><span class="line">3 a:</span><br><span class="line">4     @echo aaa</span><br><span class="line">5 </span><br><span class="line">6 b:</span><br><span class="line">7     @echo bbb</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:b$ make</span><br><span class="line">makefile:1: /home/chuck/bsp/b</span><br><span class="line">make -f ../a/makefile</span><br><span class="line">make[1]: Entering directory '/home/chuck/bsp/b'</span><br><span class="line">../a/makefile:1: /home/chuck/bsp/b</span><br><span class="line">aaa         //执行的第一个目标a，不是b。其实，make -f ../a/makefile的效果和将a的makefile拷贝</span><br><span class="line">              到当前目录，再执行make是一样的。没有目标传递的说法。</span><br><span class="line">make[1]: Leaving directory '/home/chuck/bsp/b'</span><br></pre></td></tr></table></figure>
+
+<h3 id="make-C"><a href="#make-C" class="headerlink" title="make -C"></a>make -C</h3><p><code>-C</code> 指切换到其他目录。<br>我们编译驱动就会指定 <code>-C</code> 为内核根目录。<br>还是使用上面小结的a、b的makeifle。<br>修改一下：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">1 $(warning $(shell pwd))    </span><br><span class="line">2 </span><br><span class="line">3 b:</span><br><span class="line">4     #make -f ../a/makefile</span><br><span class="line">5     make -C ../a/</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chuck@chuck11:b$ make</span><br><span class="line">makefile:1: /home/chuck/bsp/b</span><br><span class="line"><span class="meta">#</span><span class="bash">make -f ../a/makefile</span></span><br><span class="line">make -C ../a/</span><br><span class="line">make[1]: Entering directory '/home/chuck/bsp/a'     //目录变了，执行-C的效果和cd到a目录，再执行</span><br><span class="line">                                                      make效果是一样的。</span><br><span class="line">makefile:1: /home/chuck/bsp/a</span><br><span class="line">aaa</span><br><span class="line">make[1]: Leaving directory '/home/chuck/bsp/a'</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+]]></content>
+      <categories>
+        <category>compile</category>
       </categories>
   </entry>
 </search>
