@@ -33,7 +33,88 @@ Note：
 
 
 ## 变量
-<font color=red size=4>[TODO]</font>
+### 延时变量和即时变量
+makefile中的赋值分为两种：
+* 1）延时变量；
+     在执行时才确定。
+* 2）即时变量；
+     立即确定。
+
+例：
+```shell
+a'makefile:
+  1 VAR = $@
+  2 VAR2 := $@
+  3 $(warning '$(VAR)','$(VAR2)')
+  4                      
+  5 a:                   
+  6     @echo \'$(VAR)\',\'$(VAR2)\'
+```
+执行：
+```shell
+chuck@chuck11:a$ make
+makefile:3: '',''
+'a',''
+```
+`VAR` 是延时变量，在执行命令时才确定。
+`VAR2` 是即时变量，写时是多少就是多少。
+
+> 那么gnu make是怎么规定哪些是延时变量，哪些是即时变量呢？
+
+|举例|说明|
+|-|-|
+|VAR = xxx|延时变量|
+|VAR ?= xxx|延时变量|
+|VAR := xxx|即时变量|
+|VAR += xxx|跟随原有定义，如果原来VAR是延时变量，那么现在还是延时变量，否则还是即时变量|
+
+### 变量的导出（export）
+我们在编译时，目录通常是切来切去的（通过make -C）。
+*注：*
+*关于 `-C` ，请参考[参数](#ARCHOR_参数)一节*
+一个makefile里的变量是没法在其他makefile中使用的，如果要使用，就要用 `export` 将它导出。
+
+例：
+```shell
+├── a
+│   └── makefile
+├── b
+│   └── makefile
+
+a's makefile:
+  1 a:
+  2     @echo \'$(VAR)\'
+
+b's makefile:
+  1 VAR ?= iamvar
+  2 
+  3 b:
+  4     make -C ../a/
+```
+b目录下执行make：
+```shell
+chuck@chuck11:b$ make
+make -C ../a/
+make[1]: Entering directory '/home/chuck/bsp/a'
+''
+make[1]: Leaving directory '/home/chuck/bsp/a'
+```
+修改b makefile，将 `VAR` 导出：
+```shell
+  1 VAR ?= iamvar
+  2 export VAR
+  3 
+  4 b:
+  5     make -C ../a/
+```
+执行：
+```shell
+chuck@chuck11:b$ make
+make -C ../a
+make[1]: Entering directory '/home/chuck/bsp/a'
+'iamvar'
+make[1]: Leaving directory '/home/chuck/bsp/a'
+```
 <br>
 
 
@@ -58,7 +139,100 @@ a = $(wildcard a)
 a = $(wildcard *.c)
 ```
 
-## 参数
+### shell
+`$(shell xxx)`
+
+### filter / filter-out
+#### filter
+`$(filter pattern, xxx)`
+把xxx中符合pattern的<font color=red>**过滤出来**</font>。
+
+例：
+```shell
+  1 obj-y := a.o b.o c/ d/
+  2 DIR := $(filter %/, $(obj-y))
+  3 NDIR := $(filter-out %/, $(obj-y))
+  4 
+  5 a:
+  6     @echo $(DIR)
+  7     @echo $(NDIR)
+```
+执行：
+```shell
+chuck@chuck11:a$ make
+c/ d/
+a.o b.o
+```
+
+#### filter-out
+`$(filter-out pattern, xxx)`
+把xxx中符合pattern的<font color=red>**过滤掉**</font>。
+
+### patsubst
+`$(patsubst pattern, replacement, xxx)`
+把xxx中符合pattern的替换成replacement。
+patsubst这个名字不好记。
+
+例：
+```shell
+  1 obj-y := a.c b.o c/ d/
+  2 VAR := $(patsubst %/, %, $(obj-y))
+  3 VAR := $(patsubst %.c, %.o, $(VAR))
+  4                              
+  5 a:
+  6     @echo $(VAR)
+```
+执行：
+```shell
+chuck@chuck11:a$ make
+a.o b.o c d
+```
+<br>
+
+
+## 假目标（.PHONY）
+我们makefile中会有写 `clean` 目标，用来清除编译环境。
+如果目录下恰巧有一个 `clean文件` ，那么make就会不执行：
+```shell
+b's makefile:
+  1 VAR ?= iamvar
+  2 export VAR
+  3 
+  4 b:
+  5     make -C ../a/
+  6 
+  7 clean:
+  8     @echo "clean"
+```
+执行：
+```shell
+chuck@chuck11:b$ >clean
+chuck@chuck11:b$ make clean
+make: 'clean' is up to date.
+```
+这种情况，我们需要告诉make，这个target指定时，一定要被执行。
+使用 `.PHONY` （phony的意思是‘假的’）:
+```shell
+  1 VAR ?= iamvar
+  2 export VAR
+  3 
+  4 .PHONY: clean               //指定哪些是虚假目标
+  5        
+  6 b:
+  7     make -C ../a/
+  8 
+  9 clean:
+ 10     @echo "clean"
+```
+执行：
+```shell
+chuck@chuck11:b$ make clean
+clean
+```
+<br>
+
+
+## <a name="ARCHOR_参数">参数</a>
 
 ### make -f
 `-f` 选项用来指定makefile。
