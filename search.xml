@@ -499,4 +499,62 @@
         <category>系统工具</category>
       </categories>
   </entry>
+  <entry>
+    <title>class_create和device_create</title>
+    <url>/2020/05/16/class-create%E5%92%8Cdevice-create/</url>
+    <content><![CDATA[<p>这两个接口的作用。</p>
+<a id="more"></a>
+
+<h2 id="class-create和device-create的结合使用"><a href="#class-create和device-create的结合使用" class="headerlink" title="class_create和device_create的结合使用"></a>class_create和device_create的结合使用</h2><p>在字符设备驱动中我们会同时使用这两个接口。<br>示例：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> __init <span class="title">miscdrv_entry</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">    major = register_chrdev(<span class="number">0</span>, DRVNAME, &amp;miscdrv);              <span class="comment">//#define DRVNAME "miscdev"</span></span><br><span class="line">    pr_info(<span class="string">"[%s] major: %d\n"</span>, __func__, major);</span><br><span class="line"></span><br><span class="line">    miscdrv_class = class_create(THIS_MODULE, <span class="string">"miscdrv_class"</span>);</span><br><span class="line">        ret = PTR_ERR(miscdrv_class);</span><br><span class="line">        <span class="keyword">if</span> (IS_ERR(miscdrv_class)) &#123;</span><br><span class="line">        unregister_chrdev(major, DRVNAME);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;   </span><br><span class="line"></span><br><span class="line">    device_create(miscdrv_class, <span class="literal">NULL</span>, MKDEV(major, <span class="number">0</span>), <span class="literal">NULL</span>, <span class="string">"miscdev%d"</span>, <span class="number">0</span>); </span><br><span class="line">    device_create(miscdrv_class, <span class="literal">NULL</span>, MKDEV(major, <span class="number">10</span>), <span class="literal">NULL</span>, <span class="string">"miscdev%d"</span>, <span class="number">2</span>); </span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> __exit <span class="title">miscdrv_exit</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    device_destroy(miscdrv_class, MKDEV(major, <span class="number">0</span>));</span><br><span class="line">    device_destroy(miscdrv_class, MKDEV(major, <span class="number">10</span>));</span><br><span class="line"></span><br><span class="line">    class_destroy(miscdrv_class);</span><br><span class="line">    unregister_chrdev(major, DRVNAME);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通常我们会先创建一个类（<code>class</code>），在类下创建多个设备（这里估计任意写的次设备号）。<br>这样，驱动加载后会自动生成 <code>/dev/miscdev0</code> 和 <code>/dev/miscdev2</code>。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /dev/misc* -l</span><br><span class="line">crw-------    1 root     root      245,   0 Jan  1 00:43 /dev/miscdev0</span><br><span class="line">crw-------    1 root     root      245,  10 Jan  1 00:43 /dev/miscdev2</span><br></pre></td></tr></table></figure>
+<p>同时，<code>sysfs</code> 虚拟文件系统会创建2个目录：</p>
+<ul>
+<li><code>/sys/class/miscdev_class</code>:<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/class/miscdrv_class/ -l</span><br><span class="line">total 0</span><br><span class="line">lrwxrwxrwx    1 root     root             0 Jan  1 00:44 miscdev0 -&gt; ../../devices/virtual/miscdrv_class/miscdev0</span><br><span class="line">lrwxrwxrwx    1 root     root             0 Jan  1 00:44 miscdev2 -&gt; ../../devices/virtual/miscdrv_class/miscdev2</span><br></pre></td></tr></table></figure></li>
+<li><code>/sys/devices/virtual/miscdrv_class/</code> (注意是miscdrv_class而不是字符设备明miscdev):<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/devices/virtual/miscdrv_class/ -l</span><br><span class="line">total 0</span><br><span class="line">drwxr-xr-x    3 root     root             0 Jan  1 00:43 miscdev0</span><br><span class="line">drwxr-xr-x    3 root     root             0 Jan  1 00:43 miscdev2</span><br></pre></td></tr></table></figure>
+<br>
+
+</li>
+</ul>
+<h2 id="只使用class-create"><a href="#只使用class-create" class="headerlink" title="只使用class_create"></a>只使用class_create</h2><p>显然两个字符设备节点是通过 <code>device_create</code> 创建出来的。</p>
+<blockquote>
+<p>如果代码中不创建设备（不调用device_create）会怎么样呢？</p>
+</blockquote>
+<blockquote>
+<p>通过mknod创建的设备能直接使用吗？</p>
+</blockquote>
+<h3 id="不调用device-create"><a href="#不调用device-create" class="headerlink" title="不调用device_create"></a>不调用device_create</h3><p>和预期一样。但有一点意外：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/class/miscdrv_class/ -l</span><br><span class="line">total 0</span><br><span class="line">[root@imx6ull:/mnt]# ls /sys/devices/virtual/miscdev_class -l               //如果类下没有设备，sysfs甚至不创建类目录</span><br><span class="line">ls: /sys/devices/virtual/miscdev_class: No such file or directory</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用mknod手动添加设备"><a href="#使用mknod手动添加设备" class="headerlink" title="使用mknod手动添加设备"></a>使用mknod手动添加设备</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# mknod /dev/miscdev0 c 245 0</span><br><span class="line">[root@imx6ull:/mnt]# ls /dev/misc* -l</span><br><span class="line">crw-r--r--    1 root     root      245,   0 Jan  1 00:59 /dev/miscdev0</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>可以直接访问吗？当然是可以的：</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# cat /dev/miscdev0 </span><br><span class="line">[ 1624.245360] [miscdrv_open] entry</span><br><span class="line">[ 1624.248948] [miscdrv_read] entry</span><br><span class="line">[ 1624.252240] [miscdrv_close] entry</span><br></pre></td></tr></table></figure>
+<p>内核会根据主设备号找到驱动，调用驱动对应接口。<br>至于你操作的是哪个具体设备，驱动需要根据次设备号判断。</p>
+<blockquote>
+<p>这下有设备了，sysfs会创建 <code>/sys/devices/virtual/miscdev_class</code> 目录吗？</p>
+</blockquote>
+<p>仍然不会:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/devices/virtual/miscdrv_class/ -l</span><br><span class="line">ls: /sys/devices/virtual/miscdrv_class/: No such file or directory</span><br></pre></td></tr></table></figure>
+<p>而且对应的class目录下也没有增加新设备：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/class/miscdrv_class/ -l</span><br><span class="line">total 0</span><br></pre></td></tr></table></figure>
+<p><strong>总结</strong>：<br>也就是说只有通过device_create接口创建的设备，sysfs才会将该设备纳入管理。<br><br></p>
+<h2 id="device未销毁（未device-destroy）的后果"><a href="#device未销毁（未device-destroy）的后果" class="headerlink" title="device未销毁（未device_destroy）的后果"></a>device未销毁（未device_destroy）的后果</h2><p>通过 <code>mknod</code> 创建的设备节点，我们直接 <code>rm</code> 删除就可以了。</p>
+<blockquote>
+<p>如果是通过 <code>device_create</code> 创建的设备不销毁会有什么后果？</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">device_create(miscdrv_class, <span class="literal">NULL</span>, MKDEV(major, <span class="number">5</span>), <span class="literal">NULL</span>, <span class="string">"miscdev%d"</span>, <span class="number">5</span>);</span><br><span class="line"><span class="comment">//device_destroy(miscdrv_class, MKDEV(major, 5));   //故意不销毁</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# insmod miscdrv.ko </span><br><span class="line">[ 2761.639832] [miscdrv_entry] major: 245</span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# rmmod miscdrv </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# insmod miscdrv.ko </span><br><span class="line">[ 2774.192532] [miscdrv_entry] major: 245</span><br><span class="line">[ 2774.206907] ------------[ cut here ]------------</span><br><span class="line">[ 2774.211642] WARNING: CPU: 0 PID: 539 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x64/0x74</span><br><span class="line">[ 2774.221564] sysfs: cannot create duplicate filename '/devices/virtual/miscdrv_class'     //内核WARN告警：无法创建重复目录</span><br><span class="line">[ 2774.232010] ---[ end trace 1f6c23c15d2b3615 ]---</span><br><span class="line">[ 2774.243888] ------------[ cut here ]------------</span><br><span class="line">[ 2774.250508] WARNING: CPU: 0 PID: 539 at lib/kobject.c:240 kobject_add_internal+0x2cc/0x340</span><br><span class="line">[ 2774.259632] ---[ end trace 1f6c23c15d2b3616 ]---</span><br><span class="line">[ 2774.267846] ------------[ cut here ]------------</span><br><span class="line">[ 2774.272500] WARNING: CPU: 0 PID: 539 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x64/0x74</span><br><span class="line">[ 2774.281248] sysfs: cannot create duplicate filename '/dev/char/245:5'</span><br><span class="line">[ 2774.288517] ---[ end trace 1f6c23c15d2b3617 ]---</span><br></pre></td></tr></table></figure>
+<p>而且这个错误是无法恢复的。<br>我们尝试删除告警的目录：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# rmmod miscdrv </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# rm -rf /sys/devices/virtual/miscdrv_class/</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/subsystem': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_suspended_time': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/autosuspend_delay_ms': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_active_time': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/control': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_status': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/dev': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/uevent': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class': Operation not permitted</span><br></pre></td></tr></table></figure>
+<br>
+
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
 </search>
