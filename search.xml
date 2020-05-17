@@ -557,4 +557,32 @@
         <category>linux</category>
       </categories>
   </entry>
+  <entry>
+    <title>platform总线</title>
+    <url>/2020/05/17/platform%E6%80%BB%E7%BA%BF/</url>
+    <content><![CDATA[<p>platform虚拟总线的使用注意事项。</p>
+<a id="more"></a>
+
+
+<h2 id="platform-device的资源"><a href="#platform-device的资源" class="headerlink" title="platform_device的资源"></a>platform_device的资源</h2><p>描述device资源的方式有两种：</p>
+<ul>
+<li>1）<code>resource</code> :<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//arch/arm/mach-cns3xxx/devices.c</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">resource</span> <span class="title">cns3xxx_sdhci_resources</span>[] = &#123;</span></span><br><span class="line">    [<span class="number">0</span>] = &#123;</span><br><span class="line">        .start = CNS3XXX_SDIO_BASE,</span><br><span class="line">        .<span class="built_in">end</span>   = CNS3XXX_SDIO_BASE + SZ_4K - <span class="number">1</span>,</span><br><span class="line">        .flags = IORESOURCE_MEM,</span><br><span class="line">    &#125;,</span><br><span class="line">    [<span class="number">1</span>] = &#123; </span><br><span class="line">        .start = IRQ_CNS3XXX_SDIO,</span><br><span class="line">        .<span class="built_in">end</span>   = IRQ_CNS3XXX_SDIO,</span><br><span class="line">        .flags = IORESOURCE_IRQ,</span><br><span class="line">    &#125;, </span><br><span class="line">&#125;;  </span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> <span class="title">cns3xxx_sdhci_pdev</span> = &#123;</span></span><br><span class="line">    .name       = <span class="string">"sdhci-cns3xxx"</span>,</span><br><span class="line">    .id     = <span class="number">0</span>,</span><br><span class="line">    .num_resources  = ARRAY_SIZE(cns3xxx_sdhci_resources),</span><br><span class="line">    .resource   = cns3xxx_sdhci_resources,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></li>
+<li>2）dev的 <code>platform_data</code> ：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//arch/arm/mach-davinci/board-da850-evm.c</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">gpio_led</span> <span class="title">da850_evm_bb_leds</span>[] = &#123;</span></span><br><span class="line">    [<span class="number">0</span> ... DA850_N_BB_USER_LED - <span class="number">1</span>] = &#123;</span><br><span class="line">        .active_low = <span class="number">1</span>,</span><br><span class="line">        .gpio = <span class="number">-1</span>, <span class="comment">/* assigned at runtime */</span></span><br><span class="line">        .name = <span class="literal">NULL</span>, <span class="comment">/* assigned at runtime */</span></span><br><span class="line">    &#125;, </span><br><span class="line">&#125;;      </span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">gpio_led_platform_data</span> <span class="title">da850_evm_bb_leds_pdata</span> = &#123;</span></span><br><span class="line">    .leds = da850_evm_bb_leds,</span><br><span class="line">    .num_leds = ARRAY_SIZE(da850_evm_bb_leds),</span><br><span class="line">&#125;;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> <span class="title">da850_evm_bb_leds_device</span> = &#123;</span></span><br><span class="line">    .name       = <span class="string">"leds-gpio"</span>,</span><br><span class="line">    .id     = <span class="number">-1</span>, </span><br><span class="line">    .dev = &#123;</span><br><span class="line">        .platform_data = &amp;da850_evm_bb_leds_pdata</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+第二种更加自由，第一种偏向于描述硬件资源。<br>
+
+</li>
+</ul>
+<h2 id="关于platform-device的id"><a href="#关于platform-device的id" class="headerlink" title="关于platform_device的id"></a>关于platform_device的id</h2><blockquote>
+<p>id可以不初始化吗？</p>
+</blockquote>
+<p>如果只有一个device，可以不初始化，默认是0.<br>如果有多个device，必须初始化，且id不能重复。<br>否则会报以下错误：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# insmod led_imx6ull.ko </span><br><span class="line">[ 5711.683557] [bspled_probe] pdev-&gt;id:0</span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# insmod led_imx6ull2.ko </span><br><span class="line">[ 5715.843565] ------------[ cut here ]------------</span><br><span class="line">[ 5715.861461] WARNING: CPU: 0 PID: 379 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x64/0x74</span><br><span class="line">[ 5715.870601] sysfs: cannot create duplicate filename '/devices/platform/bspled.0'</span><br><span class="line">[ 5715.880155] ---[ end trace fff8368841ec45e8 ]---</span><br><span class="line">[ 5715.889641] ------------[ cut here ]------------</span><br><span class="line">[ 5715.894917] WARNING: CPU: 0 PID: 379 at lib/kobject.c:240 kobject_add_internal+0x2cc/0x340</span><br><span class="line">[ 5715.903667] ---[ end trace fff8368841ec45e9 ]---</span><br><span class="line">[ 5715.912608] [imx6ull_bspled_init] platform_device_register fail</span><br><span class="line">insmod: ERROR: could not insert module led_imx6ull2.ko: File exists</span><br></pre></td></tr></table></figure>
+<br>
+
+
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
 </search>
