@@ -14,6 +14,19 @@ kernel向app异步通知，除了我们知道的netlink以外，还有一种日�
 具体使用示例在git上，可以参考：
 [fasync示例（一个按键驱动）](https://github.com/gouchengsanren/files/tree/master/button_drv_and_app)
 *注：没有写中断处理，简单写了个框架。可能后面git会更新。不影响本文*
+示例运行：
+```
+[root@imx6ull:/mnt]# ./app &
+[2] 407
+[root@imx6ull:/mnt]# [ 2938.597544] FASYNC
+
+[root@imx6ull:/mnt]# 
+[root@imx6ull:/mnt]# 
+[root@imx6ull:/mnt]# cat /dev/bsp_button 
+get a signal : 29
+get a signal : 29
+[root@imx6ull:/mnt]# 
+```
 
 使用方式比较简单：
 * 1）声明一个 `fasync_struct` 结构体指针。
