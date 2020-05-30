@@ -552,6 +552,7 @@
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# rmmod miscdrv </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# rm -rf /sys/devices/virtual/miscdrv_class/</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/subsystem': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_suspended_time': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/autosuspend_delay_ms': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_active_time': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/control': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_status': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/dev': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/uevent': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class': Operation not permitted</span><br></pre></td></tr></table></figure>
 <br>
 
+<h2 id="miscdevice"><a href="#miscdevice" class="headerlink" title="miscdevice"></a>miscdevice</h2><p>前面写的虽然我叫了个miscdev，其实是个字符设备。<br>我们经常用的miscdevice有自己的注册注销接口，<code>misc_register</code> 和 <code>misc_deregister</code> 。<br>而miscdevice却不需要手动创建class（class_create）、也不需要创建device（device_create）。<br>这点需要注意。<br>它的设备节点只有1个，也就没有办法区分那个设备，一般通过ioctl传递需要操作的设备编号。<br><br></p>
 ]]></content>
       <categories>
         <category>linux</category>
@@ -596,6 +597,34 @@
 ]]></content>
       <categories>
         <category>居家</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>fasync</title>
+    <url>/2020/05/30/fasync/</url>
+    <content><![CDATA[<p>kernel向app异步通知，除了我们知道的netlink以外，还有一种日常工作中没有见过的方式：fasync。<br>它可以用来向app发送一个signal。app收到signal后进行一些处理。</p>
+<a id="more"></a>
+
+<h2 id="fasync"><a href="#fasync" class="headerlink" title="fasync"></a>fasync</h2><p>具体使用示例在git上，可以参考：<br><a href="https://github.com/gouchengsanren/files/tree/master/button_drv_and_app" target="_blank" rel="noopener">fasync示例（一个按键驱动）</a><br><em>注：没有写中断处理，简单写了个框架。可能后面git会更新。不影响本文</em></p>
+<p>使用方式比较简单：</p>
+<ul>
+<li>1）声明一个 <code>fasync_struct</code> 结构体指针。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static struct fasync_struct *b_async &#x3D; NULL;</span><br></pre></td></tr></table></figure></li>
+<li>2）<code>file_operations</code> 中实现 <code>fasync</code> 。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static int button_fasync(int fd, struct file *file, int on)</span><br><span class="line">&#123;</span><br><span class="line">    pr_info(&quot;FASYNC\n&quot;);</span><br><span class="line">    return fasync_helper(fd, file, on, &amp;b_async);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>3）中断中调用 <code>kill_fasync</code> 。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kill_fasync(&amp;b_async, SIGIO, POLL_IN);      &#x2F;&#x2F;SIGIO:29</span><br></pre></td></tr></table></figure></li>
+<li>4）app中设置信号处理函数、打开设备节点、绑定fd和pid、flag增加FASYNC。<br>由于app程序短，就直接全部贴上来了。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line"></span><br><span class="line">int fd;</span><br><span class="line"></span><br><span class="line">void my_sig_func(int signo)</span><br><span class="line">&#123;</span><br><span class="line">    printf(&quot;get a signal : %d\n&quot;, signo);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">    int Oflags;</span><br><span class="line"></span><br><span class="line">    signal(SIGIO, my_sig_func);</span><br><span class="line">    fd &#x3D; open(&quot;&#x2F;dev&#x2F;bsp_button&quot;, O_RDWR);</span><br><span class="line">    fcntl(fd, F_SETOWN, getpid());         &#x2F;&#x2F;告诉内核，操作fd的是哪个pid</span><br><span class="line">    Oflags &#x3D; fcntl(fd, F_GETFL);</span><br><span class="line">    fcntl(fd, F_SETFL, Oflags | FASYNC);</span><br><span class="line"></span><br><span class="line">    while (1) </span><br><span class="line">    &#123;</span><br><span class="line">        sleep(2);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>这样就可以了。</p>
+<blockquote>
+<p>那么它和 <code>netlink</code> 的区别是什么呢？</p>
+</blockquote>
+<p>也是非常明显。<br><code>fasync</code> 只能传递信号（SIGNAL），且app在收到信号后，还得再向内核查询。<br>SIGNAL以下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#define SIGHUP       1</span><br><span class="line">#define SIGINT       2</span><br><span class="line">#define SIGQUIT      3</span><br><span class="line">#define SIGILL       4</span><br><span class="line">#define SIGTRAP      5</span><br><span class="line">#define SIGABRT      6</span><br><span class="line">#define SIGIOT       6</span><br><span class="line">#define SIGBUS       7</span><br><span class="line">#define SIGFPE       8</span><br><span class="line">#define SIGKILL      9</span><br><span class="line">#define SIGUSR1     10</span><br><span class="line">#define SIGSEGV     11</span><br><span class="line">#define SIGUSR2     12</span><br><span class="line">#define SIGPIPE     13</span><br><span class="line">#define SIGALRM     14</span><br><span class="line">#define SIGTERM     15</span><br><span class="line">#define SIGSTKFLT   16</span><br><span class="line">#define SIGCHLD     17</span><br><span class="line">#define SIGCONT     18</span><br><span class="line">#define SIGSTOP     19</span><br><span class="line">#define SIGTSTP     20</span><br><span class="line">#define SIGTTIN     21</span><br><span class="line">#define SIGTTOU     22</span><br><span class="line">#define SIGURG      23</span><br><span class="line">#define SIGXCPU     24</span><br><span class="line">#define SIGXFSZ     25</span><br><span class="line">#define SIGVTALRM   26</span><br><span class="line">#define SIGPROF     27</span><br><span class="line">#define SIGWINCH    28</span><br><span class="line">#define SIGIO       29</span><br><span class="line">#define SIGPOLL     SIGIO</span><br></pre></td></tr></table></figure>
+<p>而 <code>netlink</code> 可以传递任何信息。<br><br></p>
+]]></content>
+      <categories>
+        <category>linux</category>
       </categories>
   </entry>
 </search>

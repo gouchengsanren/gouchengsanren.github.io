@@ -20,19 +20,19 @@
     var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="记录man的基础知识，常用的指令、系统调用等等的说明。">
+  <meta name="description" content="kernel向app异步通知，除了我们知道的netlink以外，还有一种日常工作中没有见过的方式：fasync。它可以用来向app发送一个signal。app收到signal后进行一些处理。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="man">
-<meta property="og:url" content="http://yoursite.com/2020/04/12/man/index.html">
+<meta property="og:title" content="fasync">
+<meta property="og:url" content="http://yoursite.com/2020/05/30/fasync/index.html">
 <meta property="og:site_name" content="陋室录">
-<meta property="og:description" content="记录man的基础知识，常用的指令、系统调用等等的说明。">
+<meta property="og:description" content="kernel向app异步通知，除了我们知道的netlink以外，还有一种日常工作中没有见过的方式：fasync。它可以用来向app发送一个signal。app收到signal后进行一些处理。">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-04-12T06:56:37.000Z">
-<meta property="article:modified_time" content="2020-04-18T02:58:14.399Z">
+<meta property="article:published_time" content="2020-05-30T14:09:23.000Z">
+<meta property="article:modified_time" content="2020-05-30T14:28:28.417Z">
 <meta property="article:author" content="缑城散人">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://yoursite.com/2020/04/12/man/">
+<link rel="canonical" href="http://yoursite.com/2020/05/30/fasync/">
 
 
 <script id="page-configurations">
@@ -45,7 +45,7 @@
   };
 </script>
 
-  <title>man | 陋室录</title>
+  <title>fasync | 陋室录</title>
   
 
 
@@ -184,7 +184,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/12/man/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/05/30/fasync/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -197,7 +197,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          man
+          fasync
         </h1>
 
         <div class="post-meta">
@@ -206,16 +206,10 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2020-04-12 06:56:37" itemprop="dateCreated datePublished" datetime="2020-04-12T06:56:37+00:00">2020-04-12</time>
+              <time title="创建时间：2020-05-30 14:09:23 / 修改时间：14:28:28" itemprop="dateCreated datePublished" datetime="2020-05-30T14:09:23+00:00">2020-05-30</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-18 02:58:14" itemprop="dateModified" datetime="2020-04-18T02:58:14+00:00">2020-04-18</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -237,19 +231,26 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>记录man的基础知识，常用的指令、系统调用等等的说明。</p>
+        <p>kernel向app异步通知，除了我们知道的netlink以外，还有一种日常工作中没有见过的方式：fasync。<br>它可以用来向app发送一个signal。app收到signal后进行一些处理。</p>
 <a id="more"></a>
 
-<p><code>man man</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">1   Executable programs or shell commands</span><br><span class="line">2   System calls (functions provided by the kernel)</span><br><span class="line">3   Library calls (functions within program libraries)</span><br><span class="line">4   Special files (usually found in &#x2F;dev)</span><br><span class="line">5   File formats and conventions eg &#x2F;etc&#x2F;passwd</span><br><span class="line">6   Games</span><br><span class="line">7   Miscellaneous (including macro packages and conventions), e.g. man(7), groff(7)</span><br><span class="line">8   System administration commands (usually only for root)</span><br><span class="line">9   Kernel routines [Non standard]</span><br></pre></td></tr></table></figure>
-<p>man这本书有9本（默认从第1本开始找，依次往后）：</p>
+<h2 id="fasync"><a href="#fasync" class="headerlink" title="fasync"></a>fasync</h2><p>具体使用示例在git上，可以参考：<br><a href="https://github.com/gouchengsanren/files/tree/master/button_drv_and_app" target="_blank" rel="noopener">fasync示例（一个按键驱动）</a><br><em>注：没有写中断处理，简单写了个框架。可能后面git会更新。不影响本文</em></p>
+<p>使用方式比较简单：</p>
 <ul>
-<li>第一本讲系统指令<br>比如 <code>man ascii</code> 、<code>man sed</code> 等<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SED(1)                                            User Commands                                            SED(1)</span><br><span class="line"></span><br><span class="line">NAME</span><br><span class="line">       sed - stream editor for filtering and transforming text</span><br></pre></td></tr></table></figure>
-左上角的 <code>SED(1)</code> 这个1就是第几本。</li>
-<li>第二本讲系统调用<br>比如 <code>man 2 open</code> 、 <code>man select</code> 等<br>如果 <code>open</code> 不指定 <code>2</code> ，那么 <code>man</code> 默认查询的是 <code>openvt</code>。<br>而 <code>select</code> 在第一本书中没有类似的。</li>
-<li>[FIX ME]<br>
+<li>1）声明一个 <code>fasync_struct</code> 结构体指针。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static struct fasync_struct *b_async &#x3D; NULL;</span><br></pre></td></tr></table></figure></li>
+<li>2）<code>file_operations</code> 中实现 <code>fasync</code> 。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">static int button_fasync(int fd, struct file *file, int on)</span><br><span class="line">&#123;</span><br><span class="line">    pr_info(&quot;FASYNC\n&quot;);</span><br><span class="line">    return fasync_helper(fd, file, on, &amp;b_async);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>3）中断中调用 <code>kill_fasync</code> 。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kill_fasync(&amp;b_async, SIGIO, POLL_IN);      &#x2F;&#x2F;SIGIO:29</span><br></pre></td></tr></table></figure></li>
+<li>4）app中设置信号处理函数、打开设备节点、绑定fd和pid、flag增加FASYNC。<br>由于app程序短，就直接全部贴上来了。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line"></span><br><span class="line">int fd;</span><br><span class="line"></span><br><span class="line">void my_sig_func(int signo)</span><br><span class="line">&#123;</span><br><span class="line">    printf(&quot;get a signal : %d\n&quot;, signo);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">    int Oflags;</span><br><span class="line"></span><br><span class="line">    signal(SIGIO, my_sig_func);</span><br><span class="line">    fd &#x3D; open(&quot;&#x2F;dev&#x2F;bsp_button&quot;, O_RDWR);</span><br><span class="line">    fcntl(fd, F_SETOWN, getpid());         &#x2F;&#x2F;告诉内核，操作fd的是哪个pid</span><br><span class="line">    Oflags &#x3D; fcntl(fd, F_GETFL);</span><br><span class="line">    fcntl(fd, F_SETFL, Oflags | FASYNC);</span><br><span class="line"></span><br><span class="line">    while (1) </span><br><span class="line">    &#123;</span><br><span class="line">        sleep(2);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 </li>
 </ul>
+<p>这样就可以了。</p>
+<blockquote>
+<p>那么它和 <code>netlink</code> 的区别是什么呢？</p>
+</blockquote>
+<p>也是非常明显。<br><code>fasync</code> 只能传递信号（SIGNAL），且app在收到信号后，还得再向内核查询。<br>SIGNAL以下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">#define SIGHUP       1</span><br><span class="line">#define SIGINT       2</span><br><span class="line">#define SIGQUIT      3</span><br><span class="line">#define SIGILL       4</span><br><span class="line">#define SIGTRAP      5</span><br><span class="line">#define SIGABRT      6</span><br><span class="line">#define SIGIOT       6</span><br><span class="line">#define SIGBUS       7</span><br><span class="line">#define SIGFPE       8</span><br><span class="line">#define SIGKILL      9</span><br><span class="line">#define SIGUSR1     10</span><br><span class="line">#define SIGSEGV     11</span><br><span class="line">#define SIGUSR2     12</span><br><span class="line">#define SIGPIPE     13</span><br><span class="line">#define SIGALRM     14</span><br><span class="line">#define SIGTERM     15</span><br><span class="line">#define SIGSTKFLT   16</span><br><span class="line">#define SIGCHLD     17</span><br><span class="line">#define SIGCONT     18</span><br><span class="line">#define SIGSTOP     19</span><br><span class="line">#define SIGTSTP     20</span><br><span class="line">#define SIGTTIN     21</span><br><span class="line">#define SIGTTOU     22</span><br><span class="line">#define SIGURG      23</span><br><span class="line">#define SIGXCPU     24</span><br><span class="line">#define SIGXFSZ     25</span><br><span class="line">#define SIGVTALRM   26</span><br><span class="line">#define SIGPROF     27</span><br><span class="line">#define SIGWINCH    28</span><br><span class="line">#define SIGIO       29</span><br><span class="line">#define SIGPOLL     SIGIO</span><br></pre></td></tr></table></figure>
+<p>而 <code>netlink</code> 可以传递任何信息。<br><br></p>
 
     </div>
 
@@ -265,13 +266,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/04/12/linux%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84/" rel="prev" title="linux目录结构">
-      <i class="fa fa-chevron-left"></i> linux目录结构
+    <a href="/2020/05/17/%E5%B8%B8%E7%94%A8%E8%8D%AF/" rel="prev" title="常用药">
+      <i class="fa fa-chevron-left"></i> 常用药
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2020/04/12/linux%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/" rel="next" title="linux启动流程">
-      linux启动流程 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -330,6 +328,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#fasync"><span class="nav-number">1.</span> <span class="nav-text">fasync</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

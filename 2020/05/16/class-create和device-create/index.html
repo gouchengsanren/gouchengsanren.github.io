@@ -28,7 +28,7 @@
 <meta property="og:description" content="这两个接口的作用。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-05-16T06:59:56.000Z">
-<meta property="article:modified_time" content="2020-05-16T08:10:00.750Z">
+<meta property="article:modified_time" content="2020-05-30T14:08:53.936Z">
 <meta property="article:author" content="缑城散人">
 <meta name="twitter:card" content="summary">
 
@@ -206,10 +206,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2020-05-16 06:59:56 / 修改时间：08:10:00" itemprop="dateCreated datePublished" datetime="2020-05-16T06:59:56+00:00">2020-05-16</time>
+              <time title="创建时间：2020-05-16 06:59:56" itemprop="dateCreated datePublished" datetime="2020-05-16T06:59:56+00:00">2020-05-16</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-30 14:08:53" itemprop="dateModified" datetime="2020-05-30T14:08:53+00:00">2020-05-30</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -281,6 +287,7 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# rmmod miscdrv </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# rm -rf /sys/devices/virtual/miscdrv_class/</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/subsystem': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_suspended_time': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/autosuspend_delay_ms': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_active_time': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/control': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_status': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/dev': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/uevent': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class': Operation not permitted</span><br></pre></td></tr></table></figure>
 <br>
 
+<h2 id="miscdevice"><a href="#miscdevice" class="headerlink" title="miscdevice"></a>miscdevice</h2><p>前面写的虽然我叫了个miscdev，其实是个字符设备。<br>我们经常用的miscdevice有自己的注册注销接口，<code>misc_register</code> 和 <code>misc_deregister</code> 。<br>而miscdevice却不需要手动创建class（class_create）、也不需要创建device（device_create）。<br>这点需要注意。<br>它的设备节点只有1个，也就没有办法区分那个设备，一般通过ioctl传递需要操作的设备编号。<br><br></p>
 
     </div>
 
@@ -361,7 +368,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#class-create和device-create的结合使用"><span class="nav-number">1.</span> <span class="nav-text">class_create和device_create的结合使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#只使用class-create"><span class="nav-number">2.</span> <span class="nav-text">只使用class_create</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#不调用device-create"><span class="nav-number">2.1.</span> <span class="nav-text">不调用device_create</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用mknod手动添加设备"><span class="nav-number">2.2.</span> <span class="nav-text">使用mknod手动添加设备</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#device未销毁（未device-destroy）的后果"><span class="nav-number">3.</span> <span class="nav-text">device未销毁（未device_destroy）的后果</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#class-create和device-create的结合使用"><span class="nav-number">1.</span> <span class="nav-text">class_create和device_create的结合使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#只使用class-create"><span class="nav-number">2.</span> <span class="nav-text">只使用class_create</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#不调用device-create"><span class="nav-number">2.1.</span> <span class="nav-text">不调用device_create</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用mknod手动添加设备"><span class="nav-number">2.2.</span> <span class="nav-text">使用mknod手动添加设备</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#device未销毁（未device-destroy）的后果"><span class="nav-number">3.</span> <span class="nav-text">device未销毁（未device_destroy）的后果</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#miscdevice"><span class="nav-number">4.</span> <span class="nav-text">miscdevice</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -375,7 +382,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-count">16</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
