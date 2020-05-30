@@ -163,3 +163,12 @@ rm: can't remove '/sys/devices/virtual/miscdrv_class': Operation not permitted
 ```
 <br>
 
+## miscdevice
+前面写的虽然我叫了个miscdev，其实是个字符设备。
+我们经常用的miscdevice有自己的注册注销接口，`misc_register` 和 `misc_deregister` 。
+而miscdevice却不需要手动创建class（class_create）、也不需要创建device（device_create）。
+这点需要注意。
+它的设备节点只有1个，也就没有办法区分那个设备，一般通过ioctl传递需要操作的设备编号。
+<br>
+
+
