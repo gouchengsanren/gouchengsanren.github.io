@@ -605,7 +605,9 @@
     <content><![CDATA[<p>kernel向app异步通知，除了我们知道的netlink以外，还有一种日常工作中没有见过的方式：fasync。<br>它可以用来向app发送一个signal。app收到signal后进行一些处理。</p>
 <a id="more"></a>
 
-<h2 id="fasync"><a href="#fasync" class="headerlink" title="fasync"></a>fasync</h2><p>具体使用示例在git上，可以参考：<br><a href="https://github.com/gouchengsanren/files/tree/master/button_drv_and_app" target="_blank" rel="noopener">fasync示例（一个按键驱动）</a><br><em>注：没有写中断处理，简单写了个框架。可能后面git会更新。不影响本文</em></p>
+<h2 id="fasync"><a href="#fasync" class="headerlink" title="fasync"></a>fasync</h2><p>具体使用示例在git上，可以参考：<br><a href="https://github.com/gouchengsanren/files/tree/master/button_drv_and_app" target="_blank" rel="noopener">fasync示例（一个按键驱动）</a><br><em>注：没有写中断处理，简单写了个框架。可能后面git会更新。不影响本文</em><br>示例运行：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:&#x2F;mnt]# .&#x2F;app &amp;</span><br><span class="line">[2] 407</span><br><span class="line">[root@imx6ull:&#x2F;mnt]# [ 2938.597544] FASYNC</span><br><span class="line"></span><br><span class="line">[root@imx6ull:&#x2F;mnt]# </span><br><span class="line">[root@imx6ull:&#x2F;mnt]# </span><br><span class="line">[root@imx6ull:&#x2F;mnt]# cat &#x2F;dev&#x2F;bsp_button </span><br><span class="line">get a signal : 29</span><br><span class="line">get a signal : 29</span><br><span class="line">[root@imx6ull:&#x2F;mnt]#</span><br></pre></td></tr></table></figure>
+
 <p>使用方式比较简单：</p>
 <ul>
 <li>1）声明一个 <code>fasync_struct</code> 结构体指针。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static struct fasync_struct *b_async &#x3D; NULL;</span><br></pre></td></tr></table></figure></li>
