@@ -464,6 +464,27 @@
       </categories>
   </entry>
   <entry>
+    <title>man</title>
+    <url>/2020/04/12/man/</url>
+    <content><![CDATA[<p>记录man的基础知识，常用的指令、系统调用等等的说明。</p>
+<a id="more"></a>
+
+<p><code>man man</code></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1   Executable programs or shell commands</span><br><span class="line">2   System calls (functions provided by the kernel)</span><br><span class="line">3   Library calls (functions within program libraries)</span><br><span class="line">4   Special files (usually found in &#x2F;dev)</span><br><span class="line">5   File formats and conventions eg &#x2F;etc&#x2F;passwd</span><br><span class="line">6   Games</span><br><span class="line">7   Miscellaneous (including macro packages and conventions), e.g. man(7), groff(7)</span><br><span class="line">8   System administration commands (usually only for root)</span><br><span class="line">9   Kernel routines [Non standard]</span><br></pre></td></tr></table></figure>
+<p>man这本书有9本（默认从第1本开始找，依次往后）：</p>
+<ul>
+<li>第一本讲系统指令<br>比如 <code>man ascii</code> 、<code>man sed</code> 等<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SED(1)                                            User Commands                                            SED(1)</span><br><span class="line"></span><br><span class="line">NAME</span><br><span class="line">       sed - stream editor for filtering and transforming text</span><br></pre></td></tr></table></figure>
+左上角的 <code>SED(1)</code> 这个1就是第几本。</li>
+<li>第二本讲系统调用<br>比如 <code>man 2 open</code> 、 <code>man select</code> 等<br>如果 <code>open</code> 不指定 <code>2</code> ，那么 <code>man</code> 默认查询的是 <code>openvt</code>。<br>而 <code>select</code> 在第一本书中没有类似的。</li>
+<li>[FIX ME]<br>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
     <title>platform总线</title>
     <url>/2020/05/17/platform%E6%80%BB%E7%BA%BF/</url>
     <content><![CDATA[<p>platform虚拟总线的使用注意事项。</p>
@@ -492,27 +513,6 @@
       </categories>
   </entry>
   <entry>
-    <title>man</title>
-    <url>/2020/04/12/man/</url>
-    <content><![CDATA[<p>记录man的基础知识，常用的指令、系统调用等等的说明。</p>
-<a id="more"></a>
-
-<p><code>man man</code></p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1   Executable programs or shell commands</span><br><span class="line">2   System calls (functions provided by the kernel)</span><br><span class="line">3   Library calls (functions within program libraries)</span><br><span class="line">4   Special files (usually found in &#x2F;dev)</span><br><span class="line">5   File formats and conventions eg &#x2F;etc&#x2F;passwd</span><br><span class="line">6   Games</span><br><span class="line">7   Miscellaneous (including macro packages and conventions), e.g. man(7), groff(7)</span><br><span class="line">8   System administration commands (usually only for root)</span><br><span class="line">9   Kernel routines [Non standard]</span><br></pre></td></tr></table></figure>
-<p>man这本书有9本（默认从第1本开始找，依次往后）：</p>
-<ul>
-<li>第一本讲系统指令<br>比如 <code>man ascii</code> 、<code>man sed</code> 等<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SED(1)                                            User Commands                                            SED(1)</span><br><span class="line"></span><br><span class="line">NAME</span><br><span class="line">       sed - stream editor for filtering and transforming text</span><br></pre></td></tr></table></figure>
-左上角的 <code>SED(1)</code> 这个1就是第几本。</li>
-<li>第二本讲系统调用<br>比如 <code>man 2 open</code> 、 <code>man select</code> 等<br>如果 <code>open</code> 不指定 <code>2</code> ，那么 <code>man</code> 默认查询的是 <code>openvt</code>。<br>而 <code>select</code> 在第一本书中没有类似的。</li>
-<li>[FIX ME]<br>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-  </entry>
-  <entry>
     <title>ubuntu问题汇总</title>
     <url>/2020/04/12/ubuntu%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
     <content><![CDATA[<p>记录常见的ubuntu使用过程中的问题，包括一些配置等。</p>
@@ -534,6 +534,20 @@
 ]]></content>
       <categories>
         <category>bsp</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>shell</title>
+    <url>/2020/04/12/shell/</url>
+    <content><![CDATA[<p>记录shell的基本语法、常用的使用技巧等。</p>
+<a id="more"></a>
+
+<p><strong>不一定非得写shell脚本再执行，可以直接执行</strong><br><code>for((i=0;i&lt;10;i++));do echo $i;done</code><br><br><br><strong>xargs cp结合使用</strong><br><code>find . -name &quot;*&quot; | xargs -i cp {}  /home/users/</code><br><br><br><strong>删除除了某个/某些文件外的其他文件</strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&gt;a1.c</span><br><span class="line">&gt;a2.c</span><br><span class="line">&gt;a3.c</span><br><span class="line"></span><br><span class="line">rm -rf !(a1*|a3*)</span><br></pre></td></tr></table></figure>
+<p>结果就是，保留了 <code>a1.c</code>、 <code>a3.c</code>，删除了 <code>a2.c</code> 。<br><br></p>
+]]></content>
+      <categories>
+        <category>linux</category>
       </categories>
   </entry>
   <entry>
@@ -610,21 +624,16 @@
       </categories>
   </entry>
   <entry>
-    <title>网站整合</title>
-    <url>/2020/04/20/%E7%BD%91%E7%AB%99%E6%95%B4%E5%90%88/</url>
-    <content><![CDATA[<p>一些很nice的网站，感谢所有为此付出的人们，向你们致敬！</p>
+    <title>常用药</title>
+    <url>/2020/05/17/%E5%B8%B8%E7%94%A8%E8%8D%AF/</url>
+    <content><![CDATA[<p>记录一些常用的药品。</p>
 <a id="more"></a>
 
-<h2 id="lookdiv-激活码"><a href="#lookdiv-激活码" class="headerlink" title="lookdiv-激活码"></a>lookdiv-激活码</h2><p><a href="http://lookdiv.com/" target="_blank" rel="noopener">lookdiv</a><br>我用来激活 <code>clion</code> ，但从网站说明上看，它所提供的激活码可以激活任何软件。<br>钥匙：<code>lookdiv</code><br>最新激活码：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">E70JHCOV2H-eyJsaWNlbnNlSWQiOiJFNzBKSENPVjJIIiwibGljZW5zZWVOYW1lIjoi5bGx5Lic55CG5bel5aSn5a2mIiwiYXNzaWduZWVOYW1lIjoiIiwiYXNzaWduZWVFbWFpbCI6IiIsImxpY2Vuc2VSZXN0cmljdGlvbiI6IkZvciBlZHVjYXRpb25hbCB1c2Ugb25seSIsImNoZWNrQ29uY3VycmVudFVzZSI6ZmFsc2UsInByb2R1Y3RzIjpbeyJjb2RlIjoiSUkiLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifSx7ImNvZGUiOiJBQyIsInBhaWRVcFRvIjoiMjAyMS0wMi0xOCJ9LHsiY29kZSI6IkRQTiIsInBhaWRVcFRvIjoiMjAyMS0wMi0xOCJ9LHsiY29kZSI6IlBTIiwicGFpZFVwVG8iOiIyMDIxLTAyLTE4In0seyJjb2RlIjoiR08iLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifSx7ImNvZGUiOiJETSIsInBhaWRVcFRvIjoiMjAyMS0wMi0xOCJ9LHsiY29kZSI6IkNMIiwicGFpZFVwVG8iOiIyMDIxLTAyLTE4In0seyJjb2RlIjoiUlMwIiwicGFpZFVwVG8iOiIyMDIxLTAyLTE4In0seyJjb2RlIjoiUkMiLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifSx7ImNvZGUiOiJSRCIsInBhaWRVcFRvIjoiMjAyMS0wMi0xOCJ9LHsiY29kZSI6IlBDIiwicGFpZFVwVG8iOiIyMDIxLTAyLTE4In0seyJjb2RlIjoiUk0iLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifSx7ImNvZGUiOiJXUyIsInBhaWRVcFRvIjoiMjAyMS0wMi0xOCJ9LHsiY29kZSI6IkRCIiwicGFpZFVwVG8iOiIyMDIxLTAyLTE4In0seyJjb2RlIjoiREMiLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifSx7ImNvZGUiOiJSU1UiLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifV0sImhhc2giOiIxNjc5MTgwMy8wIiwiZ3JhY2VQZXJpb2REYXlzIjo3LCJhdXRvUHJvbG9uZ2F0ZWQiOmZhbHNlLCJpc0F1dG9Qcm9sb25nYXRlZCI6ZmFsc2V9-qlgtO4xVGHX&#x2F;r45fIKMaR6B9pWQtucrCYVsz0o00crcAiYN1k&#x2F;kSMygggYl187B0u0jeXQCe4BmQIItKL79x6NwoPn43inreVhZ88f4+Cbl+V&#x2F;KGeAYeybon+7YoTs8FY4+31ANW&#x2F;LwBPxkPnlErxYdQ6oc&#x2F;k6mnxIOm5Nf8WjKRfYYIl5Bhmdt1gHMGgFsocCcTLLiqDUGEcPj5tUIJXwwYaeKAR3YGXm&#x2F;P73QpnYR&#x2F;BcGaodBN3jprQRxsS5Ia5y06rrDAJcPSZuttAFpAit&#x2F;4o&#x2F;gq2XzhrjaBCtOMxNzk3XEAT82glTlWQOQx6KnRq6D7WUXzd81g44aP+Dca5Q&#x3D;&#x3D;-MIIElTCCAn2gAwIBAgIBCTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBMB4XDTE4MTEwMTEyMjk0NloXDTIwMTEwMjEyMjk0NlowaDELMAkGA1UEBhMCQ1oxDjAMBgNVBAgMBU51c2xlMQ8wDQYDVQQHDAZQcmFndWUxGTAXBgNVBAoMEEpldEJyYWlucyBzLnIuby4xHTAbBgNVBAMMFHByb2QzeS1mcm9tLTIwMTgxMTAxMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxcQkq+zdxlR2mmRYBPzGbUNdMN6OaXiXzxIWtMEkrJMO&#x2F;5oUfQJbLLuMSMK0QHFmaI37WShyxZcfRCidwXjot4zmNBKnlyHodDij&#x2F;78TmVqFl8nOeD5+07B8VEaIu7c3E1N+e1doC6wht4I4+IEmtsPAdoaj5WCQVQbrI8KeT8M9VcBIWX7fD0fhexfg3ZRt0xqwMcXGNp3DdJHiO0rCdU+Itv7EmtnSVq9jBG1usMSFvMowR25mju2JcPFp1+I4ZI+FqgR8gyG8oiNDyNEoAbsR3lOpI7grUYSvkB&#x2F;xVy&#x2F;VoklPCK2h0f0GJxFjnye8NT1PAywoyl7RmiAVRE&#x2F;EKwIDAQABo4GZMIGWMAkGA1UdEwQCMAAwHQYDVR0OBBYEFGEpG9oZGcfLMGNBkY7SgHiMGgTcMEgGA1UdIwRBMD+AFKOetkhnQhI2Qb1t4Lm0oFKLl&#x2F;GzoRykGjAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBggkA0myxg7KDeeEwEwYDVR0lBAwwCgYIKwYBBQUHAwEwCwYDVR0PBAQDAgWgMA0GCSqGSIb3DQEBCwUAA4ICAQAF8uc+YJOHHwOFcPzmbjcxNDuGoOUIP+2h1R75Lecswb7ru2LWWSUMtXVKQzChLNPn&#x2F;72W0k+oI056tgiwuG7M49LXp4zQVlQnFmWU1wwGvVhq5R63Rpjx1zjGUhcXgayu7+9zMUW596Lbomsg8qVve6euqsrFicYkIIuUu4zYPndJwfe0YkS5nY72SHnNdbPhEnN8wcB2Kz+OIG0lih3yz5EqFhld03bGp222ZQCIghCTVL6QBNadGsiN&#x2F;lWLl4JdR3lJkZzlpFdiHijoVRdWeSWqM4y0t23c92HXKrgppoSV18XMxrWVdoSM3nuMHwxGhFyde05OdDtLpCv+jlWf5REAHHA201pAU6bJSZINyHDUTB+Beo28rRXSwSh3OUIvYwKNVeoBY+KwOJ7WnuTCUq1meE6GkKc4D&#x2F;cXmgpOyW&#x2F;1SmBz3XjVIi&#x2F;zprZ0zf3qH5mkphtg6ksjKgKjmx1cXfZAAX6wcDBNaCL+Ortep1Dh8xDUbqbBVNBL4jbiL3i3xsfNiyJgaZ5sX7i8tmStEpLbPwvHcByuf59qJhV&#x2F;bZOl8KqJBETCDJcY6O2aqhTUy+9x93ThKs1GKrRPePrWPluud7ttlgtRveit&#x2F;pcBrnQcXOl1rHq7ByB8CFAxNotRUYL9IF5n3wJOgkPojMy6jetQA5Ogc8Sm7RG6vg1yow&#x3D;&#x3D;</span><br></pre></td></tr></table></figure>
-<br>
-
-<h2 id="不蒜子-极简网页计数器"><a href="#不蒜子-极简网页计数器" class="headerlink" title="不蒜子-极简网页计数器"></a>不蒜子-极简网页计数器</h2><p><a href="http://busuanzi.ibruce.info/" target="_blank" rel="noopener">不蒜子</a><br>本站的计数就是通过不蒜子的api实现的。<br><br></p>
-<h2 id="比特虫-ico图标制作"><a href="#比特虫-ico图标制作" class="headerlink" title="比特虫-ico图标制作"></a>比特虫-ico图标制作</h2><p><a href="http://www.bitbug.net/" target="_blank" rel="noopener">比特虫</a><br>可以很方便的制作特定尺寸的图标。<br><br></p>
-<h2 id="C语言中文网"><a href="#C语言中文网" class="headerlink" title="C语言中文网"></a>C语言中文网</h2><p><a href="http://c.biancheng.net/" target="_blank" rel="noopener">C语言中文网</a><br>整理的很好，绝大部分是收费内容，但不收费的部分也非常不错。<br><br></p>
+<h2 id="夫西地酸乳膏"><a href="#夫西地酸乳膏" class="headerlink" title="夫西地酸乳膏"></a>夫西地酸乳膏</h2><p>细菌性皮肤感染。<br>治脚气效果特别好。<br>其他的皮肤类应该都可以用。<br><br></p>
+<h2 id="strataderm自风干型疤痕护理硅凝胶"><a href="#strataderm自风干型疤痕护理硅凝胶" class="headerlink" title="strataderm自风干型疤痕护理硅凝胶"></a>strataderm自风干型疤痕护理硅凝胶</h2><p>RMB:398<br>头上的疤用的这个。<br>滨江二院医生配的药。<br><br></p>
 ]]></content>
       <categories>
-        <category>tools</category>
+        <category>家</category>
       </categories>
   </entry>
   <entry>
@@ -673,6 +682,24 @@
 ]]></content>
       <categories>
         <category>阳明心学</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>网站整合</title>
+    <url>/2020/04/20/%E7%BD%91%E7%AB%99%E6%95%B4%E5%90%88/</url>
+    <content><![CDATA[<p>一些很nice的网站，感谢所有为此付出的人们，向你们致敬！</p>
+<a id="more"></a>
+
+<h2 id="lookdiv-激活码"><a href="#lookdiv-激活码" class="headerlink" title="lookdiv-激活码"></a>lookdiv-激活码</h2><p><a href="http://lookdiv.com/" target="_blank" rel="noopener">lookdiv</a><br>我用来激活 <code>clion</code> ，但从网站说明上看，它所提供的激活码可以激活任何软件。<br>钥匙：<code>lookdiv</code><br>最新激活码：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">E70JHCOV2H-eyJsaWNlbnNlSWQiOiJFNzBKSENPVjJIIiwibGljZW5zZWVOYW1lIjoi5bGx5Lic55CG5bel5aSn5a2mIiwiYXNzaWduZWVOYW1lIjoiIiwiYXNzaWduZWVFbWFpbCI6IiIsImxpY2Vuc2VSZXN0cmljdGlvbiI6IkZvciBlZHVjYXRpb25hbCB1c2Ugb25seSIsImNoZWNrQ29uY3VycmVudFVzZSI6ZmFsc2UsInByb2R1Y3RzIjpbeyJjb2RlIjoiSUkiLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifSx7ImNvZGUiOiJBQyIsInBhaWRVcFRvIjoiMjAyMS0wMi0xOCJ9LHsiY29kZSI6IkRQTiIsInBhaWRVcFRvIjoiMjAyMS0wMi0xOCJ9LHsiY29kZSI6IlBTIiwicGFpZFVwVG8iOiIyMDIxLTAyLTE4In0seyJjb2RlIjoiR08iLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifSx7ImNvZGUiOiJETSIsInBhaWRVcFRvIjoiMjAyMS0wMi0xOCJ9LHsiY29kZSI6IkNMIiwicGFpZFVwVG8iOiIyMDIxLTAyLTE4In0seyJjb2RlIjoiUlMwIiwicGFpZFVwVG8iOiIyMDIxLTAyLTE4In0seyJjb2RlIjoiUkMiLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifSx7ImNvZGUiOiJSRCIsInBhaWRVcFRvIjoiMjAyMS0wMi0xOCJ9LHsiY29kZSI6IlBDIiwicGFpZFVwVG8iOiIyMDIxLTAyLTE4In0seyJjb2RlIjoiUk0iLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifSx7ImNvZGUiOiJXUyIsInBhaWRVcFRvIjoiMjAyMS0wMi0xOCJ9LHsiY29kZSI6IkRCIiwicGFpZFVwVG8iOiIyMDIxLTAyLTE4In0seyJjb2RlIjoiREMiLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifSx7ImNvZGUiOiJSU1UiLCJwYWlkVXBUbyI6IjIwMjEtMDItMTgifV0sImhhc2giOiIxNjc5MTgwMy8wIiwiZ3JhY2VQZXJpb2REYXlzIjo3LCJhdXRvUHJvbG9uZ2F0ZWQiOmZhbHNlLCJpc0F1dG9Qcm9sb25nYXRlZCI6ZmFsc2V9-qlgtO4xVGHX&#x2F;r45fIKMaR6B9pWQtucrCYVsz0o00crcAiYN1k&#x2F;kSMygggYl187B0u0jeXQCe4BmQIItKL79x6NwoPn43inreVhZ88f4+Cbl+V&#x2F;KGeAYeybon+7YoTs8FY4+31ANW&#x2F;LwBPxkPnlErxYdQ6oc&#x2F;k6mnxIOm5Nf8WjKRfYYIl5Bhmdt1gHMGgFsocCcTLLiqDUGEcPj5tUIJXwwYaeKAR3YGXm&#x2F;P73QpnYR&#x2F;BcGaodBN3jprQRxsS5Ia5y06rrDAJcPSZuttAFpAit&#x2F;4o&#x2F;gq2XzhrjaBCtOMxNzk3XEAT82glTlWQOQx6KnRq6D7WUXzd81g44aP+Dca5Q&#x3D;&#x3D;-MIIElTCCAn2gAwIBAgIBCTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBMB4XDTE4MTEwMTEyMjk0NloXDTIwMTEwMjEyMjk0NlowaDELMAkGA1UEBhMCQ1oxDjAMBgNVBAgMBU51c2xlMQ8wDQYDVQQHDAZQcmFndWUxGTAXBgNVBAoMEEpldEJyYWlucyBzLnIuby4xHTAbBgNVBAMMFHByb2QzeS1mcm9tLTIwMTgxMTAxMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxcQkq+zdxlR2mmRYBPzGbUNdMN6OaXiXzxIWtMEkrJMO&#x2F;5oUfQJbLLuMSMK0QHFmaI37WShyxZcfRCidwXjot4zmNBKnlyHodDij&#x2F;78TmVqFl8nOeD5+07B8VEaIu7c3E1N+e1doC6wht4I4+IEmtsPAdoaj5WCQVQbrI8KeT8M9VcBIWX7fD0fhexfg3ZRt0xqwMcXGNp3DdJHiO0rCdU+Itv7EmtnSVq9jBG1usMSFvMowR25mju2JcPFp1+I4ZI+FqgR8gyG8oiNDyNEoAbsR3lOpI7grUYSvkB&#x2F;xVy&#x2F;VoklPCK2h0f0GJxFjnye8NT1PAywoyl7RmiAVRE&#x2F;EKwIDAQABo4GZMIGWMAkGA1UdEwQCMAAwHQYDVR0OBBYEFGEpG9oZGcfLMGNBkY7SgHiMGgTcMEgGA1UdIwRBMD+AFKOetkhnQhI2Qb1t4Lm0oFKLl&#x2F;GzoRykGjAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBggkA0myxg7KDeeEwEwYDVR0lBAwwCgYIKwYBBQUHAwEwCwYDVR0PBAQDAgWgMA0GCSqGSIb3DQEBCwUAA4ICAQAF8uc+YJOHHwOFcPzmbjcxNDuGoOUIP+2h1R75Lecswb7ru2LWWSUMtXVKQzChLNPn&#x2F;72W0k+oI056tgiwuG7M49LXp4zQVlQnFmWU1wwGvVhq5R63Rpjx1zjGUhcXgayu7+9zMUW596Lbomsg8qVve6euqsrFicYkIIuUu4zYPndJwfe0YkS5nY72SHnNdbPhEnN8wcB2Kz+OIG0lih3yz5EqFhld03bGp222ZQCIghCTVL6QBNadGsiN&#x2F;lWLl4JdR3lJkZzlpFdiHijoVRdWeSWqM4y0t23c92HXKrgppoSV18XMxrWVdoSM3nuMHwxGhFyde05OdDtLpCv+jlWf5REAHHA201pAU6bJSZINyHDUTB+Beo28rRXSwSh3OUIvYwKNVeoBY+KwOJ7WnuTCUq1meE6GkKc4D&#x2F;cXmgpOyW&#x2F;1SmBz3XjVIi&#x2F;zprZ0zf3qH5mkphtg6ksjKgKjmx1cXfZAAX6wcDBNaCL+Ortep1Dh8xDUbqbBVNBL4jbiL3i3xsfNiyJgaZ5sX7i8tmStEpLbPwvHcByuf59qJhV&#x2F;bZOl8KqJBETCDJcY6O2aqhTUy+9x93ThKs1GKrRPePrWPluud7ttlgtRveit&#x2F;pcBrnQcXOl1rHq7ByB8CFAxNotRUYL9IF5n3wJOgkPojMy6jetQA5Ogc8Sm7RG6vg1yow&#x3D;&#x3D;</span><br></pre></td></tr></table></figure>
+<br>
+
+<h2 id="不蒜子-极简网页计数器"><a href="#不蒜子-极简网页计数器" class="headerlink" title="不蒜子-极简网页计数器"></a>不蒜子-极简网页计数器</h2><p><a href="http://busuanzi.ibruce.info/" target="_blank" rel="noopener">不蒜子</a><br>本站的计数就是通过不蒜子的api实现的。<br><br></p>
+<h2 id="比特虫-ico图标制作"><a href="#比特虫-ico图标制作" class="headerlink" title="比特虫-ico图标制作"></a>比特虫-ico图标制作</h2><p><a href="http://www.bitbug.net/" target="_blank" rel="noopener">比特虫</a><br>可以很方便的制作特定尺寸的图标。<br><br></p>
+<h2 id="C语言中文网"><a href="#C语言中文网" class="headerlink" title="C语言中文网"></a>C语言中文网</h2><p><a href="http://c.biancheng.net/" target="_blank" rel="noopener">C语言中文网</a><br>整理的很好，绝大部分是收费内容，但不收费的部分也非常不错。<br><br></p>
+]]></content>
+      <categories>
+        <category>tools</category>
       </categories>
   </entry>
   <entry>
@@ -832,33 +859,6 @@
 <td>129190</td>
 </tr>
 </tbody></table>
-]]></content>
-      <categories>
-        <category>家</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>shell</title>
-    <url>/2020/04/12/shell/</url>
-    <content><![CDATA[<p>记录shell的基本语法、常用的使用技巧等。</p>
-<a id="more"></a>
-
-<p><strong>不一定非得写shell脚本再执行，可以直接执行</strong><br><code>for((i=0;i&lt;10;i++));do echo $i;done</code><br><br><br><strong>xargs cp结合使用</strong><br><code>find . -name &quot;*&quot; | xargs -i cp {}  /home/users/</code><br><br><br><strong>删除除了某个/某些文件外的其他文件</strong></p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&gt;a1.c</span><br><span class="line">&gt;a2.c</span><br><span class="line">&gt;a3.c</span><br><span class="line"></span><br><span class="line">rm -rf !(a1*|a3*)</span><br></pre></td></tr></table></figure>
-<p>结果就是，保留了 <code>a1.c</code>、 <code>a3.c</code>，删除了 <code>a2.c</code> 。<br><br></p>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>常用药</title>
-    <url>/2020/05/17/%E5%B8%B8%E7%94%A8%E8%8D%AF/</url>
-    <content><![CDATA[<p>记录一些常用的药品。</p>
-<a id="more"></a>
-
-<h2 id="夫西地酸乳膏"><a href="#夫西地酸乳膏" class="headerlink" title="夫西地酸乳膏"></a>夫西地酸乳膏</h2><p>细菌性皮肤感染。<br>治脚气效果特别好。<br>其他的皮肤类应该都可以用。<br><br></p>
-<h2 id="strataderm自风干型疤痕护理硅凝胶"><a href="#strataderm自风干型疤痕护理硅凝胶" class="headerlink" title="strataderm自风干型疤痕护理硅凝胶"></a>strataderm自风干型疤痕护理硅凝胶</h2><p>RMB:398<br>头上的疤用的这个。<br>滨江二院医生配的药。<br><br></p>
 ]]></content>
       <categories>
         <category>家</category>
