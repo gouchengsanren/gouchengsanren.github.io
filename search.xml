@@ -13,7 +13,7 @@
 <h2 id="SMA"><a href="#SMA" class="headerlink" title="SMA"></a>SMA</h2><p>即大多数软件里的MA，简单移动平均。<br>所有人都知道，简单归简单，还是把它写出来。</p>
 <h3 id="公式"><a href="#公式" class="headerlink" title="公式"></a>公式</h3><p align="left">
 $$\begin{aligned}
-MA=\frac{\sum_{i=1}^N{CLOSE~i~}}{N}
+MA=\frac{\sum_{i=1}^N{CLOSE_i}}{N}
 \end{aligned}$$
 </p>
 
@@ -947,6 +947,66 @@ K&=\frac{2}{N+1}
 ]]></content>
       <categories>
         <category>家</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>hexo中使用MathJax</title>
+    <url>/2020/10/08/hexo%E4%B8%AD%E4%BD%BF%E7%94%A8MathJax/</url>
+    <content><![CDATA[<p>一些交易指标的公式编写，需要用到MathJax引擎。<br>记录hexo中如何使用它。</p>
+<a id="more"></a>
+<br>
+
+<p>直接插入js脚本是不行的。<br>比如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">&lt;script type=<span class="string">"text/javascript"</span> src=<span class="string">"http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"</span>&gt;&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+<p>本地 <code>hexo s</code> 运行良好，但 <code>hexo d</code> 部署上去，是无法显示公式的。</p>
+<p>其实hexo的主题，比如我在用的next是自带mathjax支持的，只需要使能它。</p>
+<p>使能MathJax：<br><code>./themes/next/_config.yml</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">505</span>   mathjax:</span><br><span class="line"><span class="number">506</span>     enable: <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>在post头添加一行：<br><code>mathjax: true</code><br>即：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: hexo中使用MathJax</span><br><span class="line">categories: hexo</span><br><span class="line">date: <span class="number">2020</span><span class="number">-10</span><span class="number">-08</span> <span class="number">09</span>:<span class="number">01</span>:<span class="number">52</span></span><br><span class="line">mathjax: <span class="literal">true</span></span><br><span class="line">tags:</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
+
+
+<p>公式目前测试只能用<code>$$ $$</code>包裹。不支持<code>$ $</code>包裹。前者是块，后者是行。<br>而且还需要在外面套一个<code>&lt;p&gt;</code>标签。原因不明。试出来的。</p>
+<blockquote>
+<p>举例</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">&lt;p align=<span class="string">"left"</span>&gt;</span><br><span class="line">$$\<span class="built_in">begin</span>&#123;aligned&#125;</span><br><span class="line">\sum_&#123;i=<span class="number">0</span>&#125;^N\int_&#123;a&#125;^&#123;b&#125;g(t,i)\<span class="built_in">text</span>&#123;d&#125;t</span><br><span class="line">\<span class="built_in">end</span>&#123;aligned&#125;$$</span><br><span class="line">&lt;/p&gt;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>效果</p>
+</blockquote>
+<p align="left">
+$$\begin{aligned}
+\sum_{i=0}^N\int_{a}^{b}g(t,i)\text{d}t
+\end{aligned}$$
+</p>
+
+<p>其中 <code>\begin{aligned}</code> 是为了多行公式可以对齐。<br>默认是右对齐。</p>
+<p>比如：</p>
+<p align="left">
+$$\begin{aligned}
+a=x_1+x_2+x_3\\
+b=x_4+x_5\\
+c=x_6
+\end{aligned}$$
+</p>
+
+<p>对齐后：</p>
+<p align="left">
+$$\begin{aligned}
+a&=x_1+x_2+x_3\\
+b&=x_4+x_5\\
+c&=x_6
+\end{aligned}$$
+</p>
+
+
+
+
+]]></content>
+      <categories>
+        <category>hexo</category>
       </categories>
   </entry>
 </search>
