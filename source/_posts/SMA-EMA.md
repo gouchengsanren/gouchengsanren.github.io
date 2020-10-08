@@ -2,6 +2,7 @@
 title: SMA/EMA
 categories: 交易
 date: 2020-10-08 05:41:29
+mathjax: true
 tags:
 ---
 
@@ -9,9 +10,6 @@ SMA和EMA的公式和含义。
 > 注，我用的行情软件是老虎，公式都是对应老虎里的。
 <!--more-->
 <br>
-
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
-
 
 ## SMA
 即大多数软件里的MA，简单移动平均。
