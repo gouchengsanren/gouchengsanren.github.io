@@ -17,7 +17,7 @@ SMA和EMA的公式和含义。
 ### 公式
 <p align="left">
 $$\begin{aligned}
-MA=\frac{\sum_{i=1}^N{CLOSE~i~}}{N}
+MA=\frac{\sum_{i=1}^N{CLOSE_i}}{N}
 \end{aligned}$$
 </p>
 
