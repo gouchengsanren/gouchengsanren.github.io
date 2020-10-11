@@ -41,62 +41,21 @@ K&=\frac{2}{N+1}
       </categories>
   </entry>
   <entry>
-    <title>class_create和device_create</title>
-    <url>/2020/05/16/class-create%E5%92%8Cdevice-create/</url>
-    <content><![CDATA[<p>这两个接口的作用。</p>
+    <title>github图片无法显示问题</title>
+    <url>/2020/10/11/github%E5%9B%BE%E7%89%87%E6%97%A0%E6%B3%95%E6%98%BE%E7%A4%BA%E9%97%AE%E9%A2%98/</url>
+    <content><![CDATA[<p>把github作为图床使用，有时候能显示，有时候不显示。</p>
 <a id="more"></a>
 
-<h2 id="class-create和device-create的结合使用"><a href="#class-create和device-create的结合使用" class="headerlink" title="class_create和device_create的结合使用"></a>class_create和device_create的结合使用</h2><p>在字符设备驱动中我们会同时使用这两个接口。<br>示例：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> __init <span class="title">miscdrv_entry</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">    major = register_chrdev(<span class="number">0</span>, DRVNAME, &amp;miscdrv);              <span class="comment">//#define DRVNAME "miscdev"</span></span><br><span class="line">    pr_info(<span class="string">"[%s] major: %d\n"</span>, __func__, major);</span><br><span class="line"></span><br><span class="line">    miscdrv_class = class_create(THIS_MODULE, <span class="string">"miscdrv_class"</span>);</span><br><span class="line">        ret = PTR_ERR(miscdrv_class);</span><br><span class="line">        <span class="keyword">if</span> (IS_ERR(miscdrv_class)) &#123;</span><br><span class="line">        unregister_chrdev(major, DRVNAME);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;   </span><br><span class="line"></span><br><span class="line">    device_create(miscdrv_class, <span class="literal">NULL</span>, MKDEV(major, <span class="number">0</span>), <span class="literal">NULL</span>, <span class="string">"miscdev%d"</span>, <span class="number">0</span>); </span><br><span class="line">    device_create(miscdrv_class, <span class="literal">NULL</span>, MKDEV(major, <span class="number">10</span>), <span class="literal">NULL</span>, <span class="string">"miscdev%d"</span>, <span class="number">2</span>); </span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> __exit <span class="title">miscdrv_exit</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    device_destroy(miscdrv_class, MKDEV(major, <span class="number">0</span>));</span><br><span class="line">    device_destroy(miscdrv_class, MKDEV(major, <span class="number">10</span>));</span><br><span class="line"></span><br><span class="line">    class_destroy(miscdrv_class);</span><br><span class="line">    unregister_chrdev(major, DRVNAME);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>通常我们会先创建一个类（<code>class</code>），在类下创建多个设备（这里估计任意写的次设备号）。<br>这样，驱动加载后会自动生成 <code>/dev/miscdev0</code> 和 <code>/dev/miscdev2</code>。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /dev/misc* -l</span><br><span class="line">crw-------    1 root     root      245,   0 Jan  1 00:43 /dev/miscdev0</span><br><span class="line">crw-------    1 root     root      245,  10 Jan  1 00:43 /dev/miscdev2</span><br></pre></td></tr></table></figure>
-<p>同时，<code>sysfs</code> 虚拟文件系统会创建2个目录：</p>
-<ul>
-<li><code>/sys/class/miscdev_class</code>:<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/class/miscdrv_class/ -l</span><br><span class="line">total 0</span><br><span class="line">lrwxrwxrwx    1 root     root             0 Jan  1 00:44 miscdev0 -&gt; ../../devices/virtual/miscdrv_class/miscdev0</span><br><span class="line">lrwxrwxrwx    1 root     root             0 Jan  1 00:44 miscdev2 -&gt; ../../devices/virtual/miscdrv_class/miscdev2</span><br></pre></td></tr></table></figure></li>
-<li><code>/sys/devices/virtual/miscdrv_class/</code> (注意是miscdrv_class而不是字符设备明miscdev):<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/devices/virtual/miscdrv_class/ -l</span><br><span class="line">total 0</span><br><span class="line">drwxr-xr-x    3 root     root             0 Jan  1 00:43 miscdev0</span><br><span class="line">drwxr-xr-x    3 root     root             0 Jan  1 00:43 miscdev2</span><br></pre></td></tr></table></figure>
-<br>
 
-</li>
-</ul>
-<h2 id="只使用class-create"><a href="#只使用class-create" class="headerlink" title="只使用class_create"></a>只使用class_create</h2><p>显然两个字符设备节点是通过 <code>device_create</code> 创建出来的。</p>
-<blockquote>
-<p>如果代码中不创建设备（不调用device_create）会怎么样呢？</p>
-</blockquote>
-<blockquote>
-<p>通过mknod创建的设备能直接使用吗？</p>
-</blockquote>
-<h3 id="不调用device-create"><a href="#不调用device-create" class="headerlink" title="不调用device_create"></a>不调用device_create</h3><p>和预期一样。但有一点意外：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/class/miscdrv_class/ -l</span><br><span class="line">total 0</span><br><span class="line">[root@imx6ull:/mnt]# ls /sys/devices/virtual/miscdev_class -l               //如果类下没有设备，sysfs甚至不创建类目录</span><br><span class="line">ls: /sys/devices/virtual/miscdev_class: No such file or directory</span><br></pre></td></tr></table></figure>
+<p>在 <code>hosts</code> 中添加如下内容：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> GitHub Start</span></span><br><span class="line">192.30.253.112    Build software better, together </span><br><span class="line">192.30.253.119    gist.github.com</span><br><span class="line">151.101.184.133    assets-cdn.github.com</span><br><span class="line">151.101.184.133    raw.githubusercontent.com</span><br><span class="line">151.101.184.133    gist.githubusercontent.com</span><br><span class="line">151.101.184.133    cloud.githubusercontent.com</span><br><span class="line">151.101.184.133    camo.githubusercontent.com</span><br><span class="line">151.101.184.133    avatars0.githubusercontent.com</span><br><span class="line">151.101.184.133    avatars1.githubusercontent.com</span><br><span class="line">151.101.184.133    avatars2.githubusercontent.com</span><br><span class="line">151.101.184.133    avatars3.githubusercontent.com</span><br><span class="line">151.101.184.133    avatars4.githubusercontent.com</span><br><span class="line">151.101.184.133    avatars5.githubusercontent.com</span><br><span class="line">151.101.184.133    avatars6.githubusercontent.com</span><br><span class="line">151.101.184.133    avatars7.githubusercontent.com</span><br><span class="line">151.101.184.133    avatars8.githubusercontent.com</span><br><span class="line"><span class="meta">#</span><span class="bash"> GitHub End</span></span><br></pre></td></tr></table></figure>
 
-<h3 id="使用mknod手动添加设备"><a href="#使用mknod手动添加设备" class="headerlink" title="使用mknod手动添加设备"></a>使用mknod手动添加设备</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# mknod /dev/miscdev0 c 245 0</span><br><span class="line">[root@imx6ull:/mnt]# ls /dev/misc* -l</span><br><span class="line">crw-r--r--    1 root     root      245,   0 Jan  1 00:59 /dev/miscdev0</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>可以直接访问吗？当然是可以的：</p>
-</blockquote>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# cat /dev/miscdev0 </span><br><span class="line">[ 1624.245360] [miscdrv_open] entry</span><br><span class="line">[ 1624.248948] [miscdrv_read] entry</span><br><span class="line">[ 1624.252240] [miscdrv_close] entry</span><br></pre></td></tr></table></figure>
-<p>内核会根据主设备号找到驱动，调用驱动对应接口。<br>至于你操作的是哪个具体设备，驱动需要根据次设备号判断。</p>
-<blockquote>
-<p>这下有设备了，sysfs会创建 <code>/sys/devices/virtual/miscdev_class</code> 目录吗？</p>
-</blockquote>
-<p>仍然不会:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/devices/virtual/miscdrv_class/ -l</span><br><span class="line">ls: /sys/devices/virtual/miscdrv_class/: No such file or directory</span><br></pre></td></tr></table></figure>
-<p>而且对应的class目录下也没有增加新设备：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/class/miscdrv_class/ -l</span><br><span class="line">total 0</span><br></pre></td></tr></table></figure>
-<p><strong>总结</strong>：<br>也就是说只有通过device_create接口创建的设备，sysfs才会将该设备纳入管理。<br><br></p>
-<h2 id="device未销毁（未device-destroy）的后果"><a href="#device未销毁（未device-destroy）的后果" class="headerlink" title="device未销毁（未device_destroy）的后果"></a>device未销毁（未device_destroy）的后果</h2><p>通过 <code>mknod</code> 创建的设备节点，我们直接 <code>rm</code> 删除就可以了。</p>
-<blockquote>
-<p>如果是通过 <code>device_create</code> 创建的设备不销毁会有什么后果？</p>
-</blockquote>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">device_create(miscdrv_class, <span class="literal">NULL</span>, MKDEV(major, <span class="number">5</span>), <span class="literal">NULL</span>, <span class="string">"miscdev%d"</span>, <span class="number">5</span>);</span><br><span class="line"><span class="comment">//device_destroy(miscdrv_class, MKDEV(major, 5));   //故意不销毁</span></span><br></pre></td></tr></table></figure>
 
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# insmod miscdrv.ko </span><br><span class="line">[ 2761.639832] [miscdrv_entry] major: 245</span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# rmmod miscdrv </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# insmod miscdrv.ko </span><br><span class="line">[ 2774.192532] [miscdrv_entry] major: 245</span><br><span class="line">[ 2774.206907] ------------[ cut here ]------------</span><br><span class="line">[ 2774.211642] WARNING: CPU: 0 PID: 539 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x64/0x74</span><br><span class="line">[ 2774.221564] sysfs: cannot create duplicate filename '/devices/virtual/miscdrv_class'     //内核WARN告警：无法创建重复目录</span><br><span class="line">[ 2774.232010] ---[ end trace 1f6c23c15d2b3615 ]---</span><br><span class="line">[ 2774.243888] ------------[ cut here ]------------</span><br><span class="line">[ 2774.250508] WARNING: CPU: 0 PID: 539 at lib/kobject.c:240 kobject_add_internal+0x2cc/0x340</span><br><span class="line">[ 2774.259632] ---[ end trace 1f6c23c15d2b3616 ]---</span><br><span class="line">[ 2774.267846] ------------[ cut here ]------------</span><br><span class="line">[ 2774.272500] WARNING: CPU: 0 PID: 539 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x64/0x74</span><br><span class="line">[ 2774.281248] sysfs: cannot create duplicate filename '/dev/char/245:5'</span><br><span class="line">[ 2774.288517] ---[ end trace 1f6c23c15d2b3617 ]---</span><br></pre></td></tr></table></figure>
-<p>而且这个错误是无法恢复的。<br>我们尝试删除告警的目录：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# rmmod miscdrv </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# rm -rf /sys/devices/virtual/miscdrv_class/</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/subsystem': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_suspended_time': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/autosuspend_delay_ms': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_active_time': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/control': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_status': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/dev': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/uevent': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class': Operation not permitted</span><br></pre></td></tr></table></figure>
-<br>
 
-<h2 id="miscdevice"><a href="#miscdevice" class="headerlink" title="miscdevice"></a>miscdevice</h2><p>前面写的虽然我叫了个miscdev，其实是个字符设备。<br>我们经常用的miscdevice有自己的注册注销接口，<code>misc_register</code> 和 <code>misc_deregister</code> 。<br>而miscdevice却不需要手动创建class（class_create）、也不需要创建device（device_create）。<br>这点需要注意。<br>它的设备节点只有1个，也就没有办法区分那个设备，一般通过ioctl传递需要操作的设备编号。<br><br></p>
+
 ]]></content>
       <categories>
-        <category>linux</category>
+        <category>git</category>
       </categories>
   </entry>
   <entry>
@@ -259,36 +218,6 @@ K&=\frac{2}{N+1}
       </categories>
   </entry>
   <entry>
-    <title>fasync</title>
-    <url>/2020/05/30/fasync/</url>
-    <content><![CDATA[<p>kernel向app异步通知，除了我们知道的netlink以外，还有一种日常工作中没有见过的方式：fasync。<br>它可以用来向app发送一个signal。app收到signal后进行一些处理。</p>
-<a id="more"></a>
-
-<h2 id="fasync"><a href="#fasync" class="headerlink" title="fasync"></a>fasync</h2><p>具体使用示例在git上，可以参考：<br><a href="https://github.com/gouchengsanren/files/tree/master/button_drv_and_app" target="_blank" rel="noopener">fasync示例（一个按键驱动）</a><br><em>注：没有写中断处理，简单写了个框架。可能后面git会更新。不影响本文</em><br>示例运行：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:&#x2F;mnt]# .&#x2F;app &amp;</span><br><span class="line">[2] 407</span><br><span class="line">[root@imx6ull:&#x2F;mnt]# [ 2938.597544] FASYNC</span><br><span class="line"></span><br><span class="line">[root@imx6ull:&#x2F;mnt]# </span><br><span class="line">[root@imx6ull:&#x2F;mnt]# </span><br><span class="line">[root@imx6ull:&#x2F;mnt]# cat &#x2F;dev&#x2F;bsp_button </span><br><span class="line">get a signal : 29</span><br><span class="line">get a signal : 29</span><br><span class="line">[root@imx6ull:&#x2F;mnt]#</span><br></pre></td></tr></table></figure>
-
-<p>使用方式比较简单：</p>
-<ul>
-<li>1）声明一个 <code>fasync_struct</code> 结构体指针。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static struct fasync_struct *b_async &#x3D; NULL;</span><br></pre></td></tr></table></figure></li>
-<li>2）<code>file_operations</code> 中实现 <code>fasync</code> 。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static int button_fasync(int fd, struct file *file, int on)</span><br><span class="line">&#123;</span><br><span class="line">    pr_info(&quot;FASYNC\n&quot;);</span><br><span class="line">    return fasync_helper(fd, file, on, &amp;b_async);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li>3）中断中调用 <code>kill_fasync</code> 。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kill_fasync(&amp;b_async, SIGIO, POLL_IN);      &#x2F;&#x2F;SIGIO:29</span><br></pre></td></tr></table></figure></li>
-<li>4）app中设置信号处理函数、打开设备节点、绑定fd和pid、flag增加FASYNC。<br>由于app程序短，就直接全部贴上来了。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line"></span><br><span class="line">int fd;</span><br><span class="line"></span><br><span class="line">void my_sig_func(int signo)</span><br><span class="line">&#123;</span><br><span class="line">    printf(&quot;get a signal : %d\n&quot;, signo);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">    int Oflags;</span><br><span class="line"></span><br><span class="line">    signal(SIGIO, my_sig_func);</span><br><span class="line">    fd &#x3D; open(&quot;&#x2F;dev&#x2F;bsp_button&quot;, O_RDWR);</span><br><span class="line">    fcntl(fd, F_SETOWN, getpid());         &#x2F;&#x2F;告诉内核，操作fd的是哪个pid</span><br><span class="line">    Oflags &#x3D; fcntl(fd, F_GETFL);</span><br><span class="line">    fcntl(fd, F_SETFL, Oflags | FASYNC);</span><br><span class="line"></span><br><span class="line">    while (1) </span><br><span class="line">    &#123;</span><br><span class="line">        sleep(2);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<p>这样就可以了。</p>
-<blockquote>
-<p>那么它和 <code>netlink</code> 的区别是什么呢？</p>
-</blockquote>
-<p>也是非常明显。<br><code>fasync</code> 只能传递信号（SIGNAL），且app在收到信号后，还得再向内核查询。<br>SIGNAL以下：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#define SIGHUP       1</span><br><span class="line">#define SIGINT       2</span><br><span class="line">#define SIGQUIT      3</span><br><span class="line">#define SIGILL       4</span><br><span class="line">#define SIGTRAP      5</span><br><span class="line">#define SIGABRT      6</span><br><span class="line">#define SIGIOT       6</span><br><span class="line">#define SIGBUS       7</span><br><span class="line">#define SIGFPE       8</span><br><span class="line">#define SIGKILL      9</span><br><span class="line">#define SIGUSR1     10</span><br><span class="line">#define SIGSEGV     11</span><br><span class="line">#define SIGUSR2     12</span><br><span class="line">#define SIGPIPE     13</span><br><span class="line">#define SIGALRM     14</span><br><span class="line">#define SIGTERM     15</span><br><span class="line">#define SIGSTKFLT   16</span><br><span class="line">#define SIGCHLD     17</span><br><span class="line">#define SIGCONT     18</span><br><span class="line">#define SIGSTOP     19</span><br><span class="line">#define SIGTSTP     20</span><br><span class="line">#define SIGTTIN     21</span><br><span class="line">#define SIGTTOU     22</span><br><span class="line">#define SIGURG      23</span><br><span class="line">#define SIGXCPU     24</span><br><span class="line">#define SIGXFSZ     25</span><br><span class="line">#define SIGVTALRM   26</span><br><span class="line">#define SIGPROF     27</span><br><span class="line">#define SIGWINCH    28</span><br><span class="line">#define SIGIO       29</span><br><span class="line">#define SIGPOLL     SIGIO</span><br></pre></td></tr></table></figure>
-<p>而 <code>netlink</code> 可以传递任何信息。<br><br></p>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-  </entry>
-  <entry>
     <title>hexo的迁移</title>
     <url>/2020/04/06/hexo%E7%9A%84%E8%BF%81%E7%A7%BB/</url>
     <content><![CDATA[<p>由于hexo deploy的是编译生成的网页静态文件（hexo init下的.git_deploy）。<br>当更换电脑，由于没有源文件，我们没法更新博文。<br>所以有必要同时对hexo源文件进行备份（其他电脑可随时获取），并能快速恢复hexo环境。<br>本文参考大多数人的做法，将hexo源文件备份至github。</p>
@@ -323,6 +252,36 @@ K&=\frac{2}{N+1}
       </categories>
   </entry>
   <entry>
+    <title>fasync</title>
+    <url>/2020/05/30/fasync/</url>
+    <content><![CDATA[<p>kernel向app异步通知，除了我们知道的netlink以外，还有一种日常工作中没有见过的方式：fasync。<br>它可以用来向app发送一个signal。app收到signal后进行一些处理。</p>
+<a id="more"></a>
+
+<h2 id="fasync"><a href="#fasync" class="headerlink" title="fasync"></a>fasync</h2><p>具体使用示例在git上，可以参考：<br><a href="https://github.com/gouchengsanren/files/tree/master/button_drv_and_app" target="_blank" rel="noopener">fasync示例（一个按键驱动）</a><br><em>注：没有写中断处理，简单写了个框架。可能后面git会更新。不影响本文</em><br>示例运行：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:&#x2F;mnt]# .&#x2F;app &amp;</span><br><span class="line">[2] 407</span><br><span class="line">[root@imx6ull:&#x2F;mnt]# [ 2938.597544] FASYNC</span><br><span class="line"></span><br><span class="line">[root@imx6ull:&#x2F;mnt]# </span><br><span class="line">[root@imx6ull:&#x2F;mnt]# </span><br><span class="line">[root@imx6ull:&#x2F;mnt]# cat &#x2F;dev&#x2F;bsp_button </span><br><span class="line">get a signal : 29</span><br><span class="line">get a signal : 29</span><br><span class="line">[root@imx6ull:&#x2F;mnt]#</span><br></pre></td></tr></table></figure>
+
+<p>使用方式比较简单：</p>
+<ul>
+<li>1）声明一个 <code>fasync_struct</code> 结构体指针。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static struct fasync_struct *b_async &#x3D; NULL;</span><br></pre></td></tr></table></figure></li>
+<li>2）<code>file_operations</code> 中实现 <code>fasync</code> 。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">static int button_fasync(int fd, struct file *file, int on)</span><br><span class="line">&#123;</span><br><span class="line">    pr_info(&quot;FASYNC\n&quot;);</span><br><span class="line">    return fasync_helper(fd, file, on, &amp;b_async);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>3）中断中调用 <code>kill_fasync</code> 。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">kill_fasync(&amp;b_async, SIGIO, POLL_IN);      &#x2F;&#x2F;SIGIO:29</span><br></pre></td></tr></table></figure></li>
+<li>4）app中设置信号处理函数、打开设备节点、绑定fd和pid、flag增加FASYNC。<br>由于app程序短，就直接全部贴上来了。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;signal.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line"></span><br><span class="line">int fd;</span><br><span class="line"></span><br><span class="line">void my_sig_func(int signo)</span><br><span class="line">&#123;</span><br><span class="line">    printf(&quot;get a signal : %d\n&quot;, signo);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">    int Oflags;</span><br><span class="line"></span><br><span class="line">    signal(SIGIO, my_sig_func);</span><br><span class="line">    fd &#x3D; open(&quot;&#x2F;dev&#x2F;bsp_button&quot;, O_RDWR);</span><br><span class="line">    fcntl(fd, F_SETOWN, getpid());         &#x2F;&#x2F;告诉内核，操作fd的是哪个pid</span><br><span class="line">    Oflags &#x3D; fcntl(fd, F_GETFL);</span><br><span class="line">    fcntl(fd, F_SETFL, Oflags | FASYNC);</span><br><span class="line"></span><br><span class="line">    while (1) </span><br><span class="line">    &#123;</span><br><span class="line">        sleep(2);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>这样就可以了。</p>
+<blockquote>
+<p>那么它和 <code>netlink</code> 的区别是什么呢？</p>
+</blockquote>
+<p>也是非常明显。<br><code>fasync</code> 只能传递信号（SIGNAL），且app在收到信号后，还得再向内核查询。<br>SIGNAL以下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#define SIGHUP       1</span><br><span class="line">#define SIGINT       2</span><br><span class="line">#define SIGQUIT      3</span><br><span class="line">#define SIGILL       4</span><br><span class="line">#define SIGTRAP      5</span><br><span class="line">#define SIGABRT      6</span><br><span class="line">#define SIGIOT       6</span><br><span class="line">#define SIGBUS       7</span><br><span class="line">#define SIGFPE       8</span><br><span class="line">#define SIGKILL      9</span><br><span class="line">#define SIGUSR1     10</span><br><span class="line">#define SIGSEGV     11</span><br><span class="line">#define SIGUSR2     12</span><br><span class="line">#define SIGPIPE     13</span><br><span class="line">#define SIGALRM     14</span><br><span class="line">#define SIGTERM     15</span><br><span class="line">#define SIGSTKFLT   16</span><br><span class="line">#define SIGCHLD     17</span><br><span class="line">#define SIGCONT     18</span><br><span class="line">#define SIGSTOP     19</span><br><span class="line">#define SIGTSTP     20</span><br><span class="line">#define SIGTTIN     21</span><br><span class="line">#define SIGTTOU     22</span><br><span class="line">#define SIGURG      23</span><br><span class="line">#define SIGXCPU     24</span><br><span class="line">#define SIGXFSZ     25</span><br><span class="line">#define SIGVTALRM   26</span><br><span class="line">#define SIGPROF     27</span><br><span class="line">#define SIGWINCH    28</span><br><span class="line">#define SIGIO       29</span><br><span class="line">#define SIGPOLL     SIGIO</span><br></pre></td></tr></table></figure>
+<p>而 <code>netlink</code> 可以传递任何信息。<br><br></p>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
     <title>linux启动流程</title>
     <url>/2020/04/12/linux%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/</url>
     <content><![CDATA[<p>梳理linux的启动流程。</p>
@@ -330,6 +289,65 @@ K&=\frac{2}{N+1}
 
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">windows             linux</span><br><span class="line">    bios                bootloader(uboot)</span><br><span class="line">    | 启动              | 启动</span><br><span class="line">    windos              linux内核(内核、驱动)</span><br><span class="line">    | 识别              | 识别</span><br><span class="line">    c盘                 根文件系统(自带的app、我们的app)</span><br><span class="line">    | 运行              | 启动</span><br><span class="line">    app                 app</span><br></pre></td></tr></table></figure>
 <br>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>class_create和device_create</title>
+    <url>/2020/05/16/class-create%E5%92%8Cdevice-create/</url>
+    <content><![CDATA[<p>这两个接口的作用。</p>
+<a id="more"></a>
+
+<h2 id="class-create和device-create的结合使用"><a href="#class-create和device-create的结合使用" class="headerlink" title="class_create和device_create的结合使用"></a>class_create和device_create的结合使用</h2><p>在字符设备驱动中我们会同时使用这两个接口。<br>示例：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> __init <span class="title">miscdrv_entry</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">    major = register_chrdev(<span class="number">0</span>, DRVNAME, &amp;miscdrv);              <span class="comment">//#define DRVNAME "miscdev"</span></span><br><span class="line">    pr_info(<span class="string">"[%s] major: %d\n"</span>, __func__, major);</span><br><span class="line"></span><br><span class="line">    miscdrv_class = class_create(THIS_MODULE, <span class="string">"miscdrv_class"</span>);</span><br><span class="line">        ret = PTR_ERR(miscdrv_class);</span><br><span class="line">        <span class="keyword">if</span> (IS_ERR(miscdrv_class)) &#123;</span><br><span class="line">        unregister_chrdev(major, DRVNAME);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;   </span><br><span class="line"></span><br><span class="line">    device_create(miscdrv_class, <span class="literal">NULL</span>, MKDEV(major, <span class="number">0</span>), <span class="literal">NULL</span>, <span class="string">"miscdev%d"</span>, <span class="number">0</span>); </span><br><span class="line">    device_create(miscdrv_class, <span class="literal">NULL</span>, MKDEV(major, <span class="number">10</span>), <span class="literal">NULL</span>, <span class="string">"miscdev%d"</span>, <span class="number">2</span>); </span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> __exit <span class="title">miscdrv_exit</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    device_destroy(miscdrv_class, MKDEV(major, <span class="number">0</span>));</span><br><span class="line">    device_destroy(miscdrv_class, MKDEV(major, <span class="number">10</span>));</span><br><span class="line"></span><br><span class="line">    class_destroy(miscdrv_class);</span><br><span class="line">    unregister_chrdev(major, DRVNAME);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通常我们会先创建一个类（<code>class</code>），在类下创建多个设备（这里估计任意写的次设备号）。<br>这样，驱动加载后会自动生成 <code>/dev/miscdev0</code> 和 <code>/dev/miscdev2</code>。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /dev/misc* -l</span><br><span class="line">crw-------    1 root     root      245,   0 Jan  1 00:43 /dev/miscdev0</span><br><span class="line">crw-------    1 root     root      245,  10 Jan  1 00:43 /dev/miscdev2</span><br></pre></td></tr></table></figure>
+<p>同时，<code>sysfs</code> 虚拟文件系统会创建2个目录：</p>
+<ul>
+<li><code>/sys/class/miscdev_class</code>:<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/class/miscdrv_class/ -l</span><br><span class="line">total 0</span><br><span class="line">lrwxrwxrwx    1 root     root             0 Jan  1 00:44 miscdev0 -&gt; ../../devices/virtual/miscdrv_class/miscdev0</span><br><span class="line">lrwxrwxrwx    1 root     root             0 Jan  1 00:44 miscdev2 -&gt; ../../devices/virtual/miscdrv_class/miscdev2</span><br></pre></td></tr></table></figure></li>
+<li><code>/sys/devices/virtual/miscdrv_class/</code> (注意是miscdrv_class而不是字符设备明miscdev):<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/devices/virtual/miscdrv_class/ -l</span><br><span class="line">total 0</span><br><span class="line">drwxr-xr-x    3 root     root             0 Jan  1 00:43 miscdev0</span><br><span class="line">drwxr-xr-x    3 root     root             0 Jan  1 00:43 miscdev2</span><br></pre></td></tr></table></figure>
+<br>
+
+</li>
+</ul>
+<h2 id="只使用class-create"><a href="#只使用class-create" class="headerlink" title="只使用class_create"></a>只使用class_create</h2><p>显然两个字符设备节点是通过 <code>device_create</code> 创建出来的。</p>
+<blockquote>
+<p>如果代码中不创建设备（不调用device_create）会怎么样呢？</p>
+</blockquote>
+<blockquote>
+<p>通过mknod创建的设备能直接使用吗？</p>
+</blockquote>
+<h3 id="不调用device-create"><a href="#不调用device-create" class="headerlink" title="不调用device_create"></a>不调用device_create</h3><p>和预期一样。但有一点意外：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/class/miscdrv_class/ -l</span><br><span class="line">total 0</span><br><span class="line">[root@imx6ull:/mnt]# ls /sys/devices/virtual/miscdev_class -l               //如果类下没有设备，sysfs甚至不创建类目录</span><br><span class="line">ls: /sys/devices/virtual/miscdev_class: No such file or directory</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用mknod手动添加设备"><a href="#使用mknod手动添加设备" class="headerlink" title="使用mknod手动添加设备"></a>使用mknod手动添加设备</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# mknod /dev/miscdev0 c 245 0</span><br><span class="line">[root@imx6ull:/mnt]# ls /dev/misc* -l</span><br><span class="line">crw-r--r--    1 root     root      245,   0 Jan  1 00:59 /dev/miscdev0</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>可以直接访问吗？当然是可以的：</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# cat /dev/miscdev0 </span><br><span class="line">[ 1624.245360] [miscdrv_open] entry</span><br><span class="line">[ 1624.248948] [miscdrv_read] entry</span><br><span class="line">[ 1624.252240] [miscdrv_close] entry</span><br></pre></td></tr></table></figure>
+<p>内核会根据主设备号找到驱动，调用驱动对应接口。<br>至于你操作的是哪个具体设备，驱动需要根据次设备号判断。</p>
+<blockquote>
+<p>这下有设备了，sysfs会创建 <code>/sys/devices/virtual/miscdev_class</code> 目录吗？</p>
+</blockquote>
+<p>仍然不会:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/devices/virtual/miscdrv_class/ -l</span><br><span class="line">ls: /sys/devices/virtual/miscdrv_class/: No such file or directory</span><br></pre></td></tr></table></figure>
+<p>而且对应的class目录下也没有增加新设备：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# ls /sys/class/miscdrv_class/ -l</span><br><span class="line">total 0</span><br></pre></td></tr></table></figure>
+<p><strong>总结</strong>：<br>也就是说只有通过device_create接口创建的设备，sysfs才会将该设备纳入管理。<br><br></p>
+<h2 id="device未销毁（未device-destroy）的后果"><a href="#device未销毁（未device-destroy）的后果" class="headerlink" title="device未销毁（未device_destroy）的后果"></a>device未销毁（未device_destroy）的后果</h2><p>通过 <code>mknod</code> 创建的设备节点，我们直接 <code>rm</code> 删除就可以了。</p>
+<blockquote>
+<p>如果是通过 <code>device_create</code> 创建的设备不销毁会有什么后果？</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">device_create(miscdrv_class, <span class="literal">NULL</span>, MKDEV(major, <span class="number">5</span>), <span class="literal">NULL</span>, <span class="string">"miscdev%d"</span>, <span class="number">5</span>);</span><br><span class="line"><span class="comment">//device_destroy(miscdrv_class, MKDEV(major, 5));   //故意不销毁</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# insmod miscdrv.ko </span><br><span class="line">[ 2761.639832] [miscdrv_entry] major: 245</span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# rmmod miscdrv </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# insmod miscdrv.ko </span><br><span class="line">[ 2774.192532] [miscdrv_entry] major: 245</span><br><span class="line">[ 2774.206907] ------------[ cut here ]------------</span><br><span class="line">[ 2774.211642] WARNING: CPU: 0 PID: 539 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x64/0x74</span><br><span class="line">[ 2774.221564] sysfs: cannot create duplicate filename '/devices/virtual/miscdrv_class'     //内核WARN告警：无法创建重复目录</span><br><span class="line">[ 2774.232010] ---[ end trace 1f6c23c15d2b3615 ]---</span><br><span class="line">[ 2774.243888] ------------[ cut here ]------------</span><br><span class="line">[ 2774.250508] WARNING: CPU: 0 PID: 539 at lib/kobject.c:240 kobject_add_internal+0x2cc/0x340</span><br><span class="line">[ 2774.259632] ---[ end trace 1f6c23c15d2b3616 ]---</span><br><span class="line">[ 2774.267846] ------------[ cut here ]------------</span><br><span class="line">[ 2774.272500] WARNING: CPU: 0 PID: 539 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x64/0x74</span><br><span class="line">[ 2774.281248] sysfs: cannot create duplicate filename '/dev/char/245:5'</span><br><span class="line">[ 2774.288517] ---[ end trace 1f6c23c15d2b3617 ]---</span><br></pre></td></tr></table></figure>
+<p>而且这个错误是无法恢复的。<br>我们尝试删除告警的目录：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# rmmod miscdrv </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# rm -rf /sys/devices/virtual/miscdrv_class/</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/subsystem': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_suspended_time': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/autosuspend_delay_ms': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_active_time': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/control': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power/runtime_status': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/power': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/dev': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5/uevent': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class/miscdev5': Operation not permitted</span><br><span class="line">rm: can't remove '/sys/devices/virtual/miscdrv_class': Operation not permitted</span><br></pre></td></tr></table></figure>
+<br>
+
+<h2 id="miscdevice"><a href="#miscdevice" class="headerlink" title="miscdevice"></a>miscdevice</h2><p>前面写的虽然我叫了个miscdev，其实是个字符设备。<br>我们经常用的miscdevice有自己的注册注销接口，<code>misc_register</code> 和 <code>misc_deregister</code> 。<br>而miscdevice却不需要手动创建class（class_create）、也不需要创建device（device_create）。<br>这点需要注意。<br>它的设备节点只有1个，也就没有办法区分那个设备，一般通过ioctl传递需要操作的设备编号。<br><br></p>
 ]]></content>
       <categories>
         <category>linux</category>
@@ -346,6 +364,215 @@ K&=\frac{2}{N+1}
 ]]></content>
       <categories>
         <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>man</title>
+    <url>/2020/04/12/man/</url>
+    <content><![CDATA[<p>记录man的基础知识，常用的指令、系统调用等等的说明。</p>
+<a id="more"></a>
+
+<p><code>man man</code></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1   Executable programs or shell commands</span><br><span class="line">2   System calls (functions provided by the kernel)</span><br><span class="line">3   Library calls (functions within program libraries)</span><br><span class="line">4   Special files (usually found in &#x2F;dev)</span><br><span class="line">5   File formats and conventions eg &#x2F;etc&#x2F;passwd</span><br><span class="line">6   Games</span><br><span class="line">7   Miscellaneous (including macro packages and conventions), e.g. man(7), groff(7)</span><br><span class="line">8   System administration commands (usually only for root)</span><br><span class="line">9   Kernel routines [Non standard]</span><br></pre></td></tr></table></figure>
+<p>man这本书有9本（默认从第1本开始找，依次往后）：</p>
+<ul>
+<li>第一本讲系统指令<br>比如 <code>man ascii</code> 、<code>man sed</code> 等<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SED(1)                                            User Commands                                            SED(1)</span><br><span class="line"></span><br><span class="line">NAME</span><br><span class="line">       sed - stream editor for filtering and transforming text</span><br></pre></td></tr></table></figure>
+左上角的 <code>SED(1)</code> 这个1就是第几本。</li>
+<li>第二本讲系统调用<br>比如 <code>man 2 open</code> 、 <code>man select</code> 等<br>如果 <code>open</code> 不指定 <code>2</code> ，那么 <code>man</code> 默认查询的是 <code>openvt</code>。<br>而 <code>select</code> 在第一本书中没有类似的。</li>
+<li>[FIX ME]<br>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>lsof.md</title>
+    <url>/2020/04/26/lsof/</url>
+    <content><![CDATA[<p>lsof</p>
+<a id="more"></a>
+
+<h2 id="lsof"><a href="#lsof" class="headerlink" title="lsof"></a>lsof</h2><p>查看所有打开的文件。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/proc]# lsof --help</span><br><span class="line">BusyBox v1.29.3 (2020-02-20 23:06:49 EST) multi-call binary.</span><br><span class="line"></span><br><span class="line">Usage: lsof </span><br><span class="line"></span><br><span class="line">Show all open files</span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/proc]# lsof</span><br><span class="line">1   /sbin/init  /run/initctl</span><br><span class="line">170 /sbin/syslogd   socket:[2427]</span><br><span class="line">170 /sbin/syslogd   /tmp/auth.log</span><br><span class="line">170 /sbin/syslogd   /tmp/messages</span><br><span class="line">170 /sbin/syslogd   /tmp/user.log</span><br><span class="line">173 /sbin/klogd /proc/kmsg</span><br><span class="line">173 /sbin/klogd socket:[2433]</span><br><span class="line">180 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">180 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">180 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">180 /usr/bin/dbus-daemon    anon_inode:[eventpoll]</span><br><span class="line">180 /usr/bin/dbus-daemon    anon_inode:inotify</span><br><span class="line">180 /usr/bin/dbus-daemon    socket:[2445]</span><br><span class="line">180 /usr/bin/dbus-daemon    socket:[2446]</span><br><span class="line">180 /usr/bin/dbus-daemon    socket:[2447]</span><br><span class="line">180 /usr/bin/dbus-daemon    socket:[2462]</span><br><span class="line">181 /home/myir/mxbackend    /dev/null</span><br><span class="line">181 /home/myir/mxbackend    /dev/console</span><br><span class="line">181 /home/myir/mxbackend    /dev/console</span><br><span class="line">181 /home/myir/mxbackend    socket:[2461]</span><br><span class="line">182 /home/myir/mxapp    /dev/console</span><br><span class="line">182 /home/myir/mxapp    /dev/console</span><br><span class="line">182 /home/myir/mxapp    /dev/console</span><br><span class="line">182 /home/myir/mxapp    /dev/urandom</span><br><span class="line">182 /home/myir/mxapp    anon_inode:[eventfd]</span><br><span class="line">182 /home/myir/mxapp    /dev/fb0</span><br><span class="line">182 /home/myir/mxapp    /dev/tty0</span><br><span class="line">182 /home/myir/mxapp    socket:[2508]</span><br><span class="line">182 /home/myir/mxapp    socket:[2509]</span><br><span class="line">182 /home/myir/mxapp    /dev/input/event1</span><br><span class="line">182 /home/myir/mxapp    socket:[2511]</span><br><span class="line">182 /home/myir/mxapp    socket:[2512]</span><br><span class="line">182 /home/myir/mxapp    /dev/input/event1</span><br><span class="line">182 /home/myir/mxapp    /tmp/qtsingleapp-mxapp-9986-0-lockfile</span><br><span class="line">182 /home/myir/mxapp    socket:[2514]</span><br><span class="line">182 /home/myir/mxapp    /dev/input/event1</span><br><span class="line">182 /home/myir/mxapp    /dev/input/event0</span><br><span class="line">189 /sbin/udevd /dev/null</span><br><span class="line">189 /sbin/udevd /dev/null</span><br><span class="line">189 /sbin/udevd /dev/null</span><br><span class="line">189 /sbin/udevd socket:[2458]</span><br><span class="line">189 /sbin/udevd socket:[2459]</span><br><span class="line">189 /sbin/udevd /dev/kmsg</span><br><span class="line">189 /sbin/udevd anon_inode:inotify</span><br><span class="line">189 /sbin/udevd anon_inode:[signalfd]</span><br><span class="line">189 /sbin/udevd socket:[2470]</span><br><span class="line">189 /sbin/udevd socket:[2471]</span><br><span class="line">189 /sbin/udevd anon_inode:[eventpoll]</span><br><span class="line">221 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">221 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">221 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">221 /usr/bin/dbus-daemon    anon_inode:[eventpoll]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[2967]</span><br><span class="line">221 /usr/bin/dbus-daemon    anon_inode:inotify</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[2971]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[2972]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[3084]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[3088]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[3123]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[3477]</span><br><span class="line">252 /usr/sbin/connmand  /dev/null</span><br><span class="line">252 /usr/sbin/connmand  /dev/null</span><br><span class="line">252 /usr/sbin/connmand  /dev/null</span><br><span class="line">252 /usr/sbin/connmand  anon_inode:[eventfd]</span><br><span class="line">252 /usr/sbin/connmand  anon_inode:[signalfd]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3087]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3091]</span><br><span class="line">252 /usr/sbin/connmand  /dev/urandom</span><br><span class="line">252 /usr/sbin/connmand  anon_inode:inotify</span><br><span class="line">252 /usr/sbin/connmand  anon_inode:inotify</span><br><span class="line">252 /usr/sbin/connmand  socket:[3097]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3119]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3124]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3131]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3135]</span><br><span class="line">252 /usr/sbin/connmand  /var/lib/connman/ethernet_00013f2d3e4d_cable/data</span><br><span class="line">252 /usr/sbin/connmand  socket:[3165]</span><br><span class="line">252 /usr/sbin/connmand  /dev/urandom</span><br><span class="line">252 /usr/sbin/connmand  socket:[3711]</span><br><span class="line">256 /usr/sbin/ofonod    /dev/null</span><br><span class="line">256 /usr/sbin/ofonod    /dev/null</span><br><span class="line">256 /usr/sbin/ofonod    /dev/null</span><br><span class="line">256 /usr/sbin/ofonod    anon_inode:[eventfd]</span><br><span class="line">256 /usr/sbin/ofonod    anon_inode:[eventpoll]</span><br><span class="line">256 /usr/sbin/ofonod    anon_inode:[signalfd]</span><br><span class="line">256 /usr/sbin/ofonod    socket:[3082]</span><br><span class="line">256 /usr/sbin/ofonod    socket:[3083]</span><br><span class="line">256 /usr/sbin/ofonod    socket:[3092]</span><br><span class="line">256 /usr/sbin/ofonod    socket:[3095]</span><br><span class="line">256 /usr/sbin/ofonod    socket:[3099]</span><br><span class="line">262 /usr/sbin/wpa_supplicant    /dev/null</span><br><span class="line">262 /usr/sbin/wpa_supplicant    /dev/null</span><br><span class="line">262 /usr/sbin/wpa_supplicant    /dev/null</span><br><span class="line">262 /usr/sbin/wpa_supplicant    socket:[3476]</span><br><span class="line">262 /usr/sbin/wpa_supplicant    socket:[3487]</span><br><span class="line">262 /usr/sbin/wpa_supplicant    socket:[3488]</span><br><span class="line">262 /usr/sbin/wpa_supplicant    socket:[3489]</span><br><span class="line">262 /usr/sbin/wpa_supplicant    socket:[3490]</span><br><span class="line">265 /usr/sbin/ntpd  /dev/null</span><br><span class="line">265 /usr/sbin/ntpd  /dev/null</span><br><span class="line">265 /usr/sbin/ntpd  /dev/null</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3481]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[5927]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[5928]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3494]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3497]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3502]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3504]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3506]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3507]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3508]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3509]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3826]</span><br><span class="line">276 /usr/sbin/sshd  /dev/null</span><br><span class="line">276 /usr/sbin/sshd  /dev/null</span><br><span class="line">276 /usr/sbin/sshd  /dev/null</span><br><span class="line">276 /usr/sbin/sshd  socket:[3538]</span><br><span class="line">276 /usr/sbin/sshd  socket:[3541]</span><br><span class="line">288 /usr/sbin/smbd  /dev/null</span><br><span class="line">288 /usr/sbin/smbd  /dev/null</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">288 /usr/sbin/smbd  anon_inode:[eventpoll]</span><br><span class="line">288 /usr/sbin/smbd  /dev/urandom</span><br><span class="line">288 /usr/sbin/smbd  /var/lib/samba/private/secrets.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/msg.lock/288</span><br><span class="line">288 /usr/sbin/smbd  socket:[3584]</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/names.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">288 /usr/sbin/smbd  /dev/null</span><br><span class="line">288 /usr/sbin/smbd  /dev/null</span><br><span class="line">288 /usr/sbin/smbd  /run/samba/smbd.pid</span><br><span class="line">288 /usr/sbin/smbd  pipe:[3585]</span><br><span class="line">288 /usr/sbin/smbd  pipe:[3585]</span><br><span class="line">288 /usr/sbin/smbd  anon_inode:[eventfd]</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/smbXsrv_version_global.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/smbXsrv_client_global.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/smbXsrv_session_global.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/smbXsrv_tcon_global.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/brlock.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/locking.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/leases.tdb</span><br><span class="line">288 /usr/sbin/smbd  /var/lib/samba/share_info.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/gencache.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/gencache_notrans.tdb</span><br><span class="line">288 /usr/sbin/smbd  /var/lib/samba/group_mapping.tdb</span><br><span class="line">288 /usr/sbin/smbd  /var/lib/samba/account_policy.tdb</span><br><span class="line">288 /usr/sbin/smbd  /var/lib/samba/private/passdb.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/smbXsrv_open_global.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/printer_list.tdb</span><br><span class="line">288 /usr/sbin/smbd  pipe:[3614]</span><br><span class="line">288 /usr/sbin/smbd  pipe:[3614]</span><br><span class="line">288 /usr/sbin/smbd  socket:[3615]</span><br><span class="line">288 /usr/sbin/smbd  socket:[3616]</span><br><span class="line">288 /usr/sbin/smbd  socket:[3617]</span><br><span class="line">288 /usr/sbin/smbd  socket:[3618]</span><br><span class="line">291 /usr/sbin/smbd  /dev/null</span><br><span class="line">291 /usr/sbin/smbd  /dev/null</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">291 /usr/sbin/smbd  anon_inode:[eventpoll]</span><br><span class="line">291 /usr/sbin/smbd  /dev/urandom</span><br><span class="line">291 /usr/sbin/smbd  /var/lib/samba/private/secrets.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/msg.lock/291</span><br><span class="line">291 /usr/sbin/smbd  socket:[3598]</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/names.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">291 /usr/sbin/smbd  /dev/null</span><br><span class="line">291 /usr/sbin/smbd  /dev/null</span><br><span class="line">291 /usr/sbin/smbd  /run/samba/smbd.pid</span><br><span class="line">291 /usr/sbin/smbd  pipe:[3585]</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/smbXsrv_version_global.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/smbXsrv_client_global.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/smbXsrv_session_global.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/smbXsrv_tcon_global.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/brlock.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/locking.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/leases.tdb</span><br><span class="line">292 /usr/sbin/smbd  /dev/null</span><br><span class="line">292 /usr/sbin/smbd  /dev/null</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">292 /usr/sbin/smbd  anon_inode:[eventpoll]</span><br><span class="line">292 /usr/sbin/smbd  /dev/urandom</span><br><span class="line">292 /usr/sbin/smbd  /var/lib/samba/private/secrets.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/msg.lock/292</span><br><span class="line">292 /usr/sbin/smbd  socket:[3600]</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/names.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">292 /usr/sbin/smbd  /dev/null</span><br><span class="line">292 /usr/sbin/smbd  /dev/null</span><br><span class="line">292 /usr/sbin/smbd  /run/samba/smbd.pid</span><br><span class="line">292 /usr/sbin/smbd  pipe:[3585]</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/smbXsrv_version_global.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/smbXsrv_client_global.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/smbXsrv_session_global.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/smbXsrv_tcon_global.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/brlock.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/locking.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/leases.tdb</span><br><span class="line">293 /usr/sbin/smbd  /dev/null</span><br><span class="line">293 /usr/sbin/smbd  /dev/null</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">293 /usr/sbin/smbd  anon_inode:[eventpoll]</span><br><span class="line">293 /usr/sbin/smbd  /dev/urandom</span><br><span class="line">293 /usr/sbin/smbd  /var/lib/samba/private/secrets.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/msg.lock/293</span><br><span class="line">293 /usr/sbin/smbd  socket:[3621]</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/names.tdb</span><br><span class="line">293 /usr/sbin/smbd  anon_inode:[eventfd]</span><br><span class="line">293 /usr/sbin/smbd  /dev/null</span><br><span class="line">293 /usr/sbin/smbd  /dev/null</span><br><span class="line">293 /usr/sbin/smbd  /run/samba/smbd.pid</span><br><span class="line">293 /usr/sbin/smbd  pipe:[3585]</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/smbXsrv_version_global.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/smbXsrv_client_global.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/smbXsrv_session_global.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/smbXsrv_tcon_global.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/brlock.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/locking.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/leases.tdb</span><br><span class="line">293 /usr/sbin/smbd  /var/lib/samba/share_info.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/gencache.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/gencache_notrans.tdb</span><br><span class="line">293 /usr/sbin/smbd  /var/lib/samba/group_mapping.tdb</span><br><span class="line">293 /usr/sbin/smbd  /var/lib/samba/account_policy.tdb</span><br><span class="line">293 /usr/sbin/smbd  /var/lib/samba/private/passdb.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/smbXsrv_open_global.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/printer_list.tdb</span><br><span class="line">293 /usr/sbin/smbd  pipe:[3614]</span><br><span class="line">294 /usr/sbin/nmbd  /dev/null</span><br><span class="line">294 /usr/sbin/nmbd  /dev/null</span><br><span class="line">294 /usr/sbin/nmbd  /tmp/samba/log.nmbd</span><br><span class="line">294 /usr/sbin/nmbd  /dev/null</span><br><span class="line">294 /usr/sbin/nmbd  anon_inode:[eventpoll]</span><br><span class="line">294 /usr/sbin/nmbd  /tmp/samba/msg.lock/294</span><br><span class="line">294 /usr/sbin/nmbd  /dev/urandom</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3630]</span><br><span class="line">294 /usr/sbin/nmbd  /tmp/samba/names.tdb</span><br><span class="line">294 /usr/sbin/nmbd  /tmp/samba/log.nmbd</span><br><span class="line">294 /usr/sbin/nmbd  /dev/null</span><br><span class="line">294 /usr/sbin/nmbd  /run/samba/nmbd.pid</span><br><span class="line">294 /usr/sbin/nmbd  pipe:[3631]</span><br><span class="line">294 /usr/sbin/nmbd  pipe:[3631]</span><br><span class="line">294 /usr/sbin/nmbd  anon_inode:[eventfd]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3632]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3633]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3804]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3846]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3847]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3848]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3849]</span><br><span class="line">297 /bin/bash   /dev/ttymxc0</span><br><span class="line">297 /bin/bash   /dev/ttymxc0</span><br><span class="line">297 /bin/bash   /dev/ttymxc0</span><br><span class="line">297 /bin/bash   /dev/ttymxc0</span><br></pre></td></tr></table></figure>
+
+
+]]></content>
+      <categories>
+        <category>系统工具</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>printf的宽度、精度变量控制</title>
+    <url>/2020/10/04/printf%E7%9A%84%E5%AE%BD%E5%BA%A6%E3%80%81%E7%B2%BE%E5%BA%A6%E5%8F%98%E9%87%8F%E6%8E%A7%E5%88%B6/</url>
+    <content><![CDATA[<p>算法竞赛中有一题要求保留小数点后<code>x</code>位，<code>x</code>由用户输入。<br>这里需要用到printf的精度变量控制。</p>
+<a id="more"></a>
+
+<p>printf format中可以用<code>*</code>来表示变量。</p>
+<blockquote>
+<p>示例</p>
+</blockquote>
+<h3 id="小数点精度"><a href="#小数点精度" class="headerlink" title="小数点精度"></a>小数点精度</h3><p><code>input</code></p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="number">1</span> <span class="number">6</span> <span class="number">4</span></span><br><span class="line"><span class="number">1</span> <span class="number">0</span> <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p><code>code</code></p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">while</span> (<span class="number">3</span> == <span class="built_in">scanf</span>(<span class="string">"%d %d %d"</span>, &amp;a, &amp;b, &amp;c) &amp;&amp; a) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%.*lf"</span>,c,(<span class="keyword">double</span>)a/b);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>terminal</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">0.1667</span><br></pre></td></tr></table></figure>
+<br>
+
+<h3 id="字符串的宽度-精度"><a href="#字符串的宽度-精度" class="headerlink" title="字符串的宽度+精度"></a>字符串的宽度+精度</h3><p><code>code</code></p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="built_in">string</span> s=<span class="string">"abc123"</span>;</span><br><span class="line"><span class="keyword">int</span> a=<span class="number">10</span>,b=<span class="number">3</span>;</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"%*.*s\n"</span>, a,b, s.c_str());</span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"%-*.*s\n"</span>, a,b, s.c_str());</span><br></pre></td></tr></table></figure>
+<p><code>terminal</code></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">       abc</span><br><span class="line">abc</span><br></pre></td></tr></table></figure>
+<br>
+
+
+
+
+]]></content>
+      <categories>
+        <category>acm</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>hexo中使用MathJax</title>
+    <url>/2020/10/08/hexo%E4%B8%AD%E4%BD%BF%E7%94%A8MathJax/</url>
+    <content><![CDATA[<p>一些交易指标的公式编写，需要用到MathJax引擎。<br>记录hexo中如何使用它。</p>
+<a id="more"></a>
+<br>
+
+<p>直接插入js脚本是不行的。<br>比如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">&lt;script type=<span class="string">"text/javascript"</span> src=<span class="string">"http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"</span>&gt;&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+<p>本地 <code>hexo s</code> 运行良好，但 <code>hexo d</code> 部署上去，是无法显示公式的。</p>
+<p>其实hexo的主题，比如我在用的next是自带mathjax支持的，只需要使能它。</p>
+<p>使能MathJax：<br><code>./themes/next/_config.yml</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">505</span>   mathjax:</span><br><span class="line"><span class="number">506</span>     enable: <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>在post头添加一行：<br><code>mathjax: true</code><br>即：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: hexo中使用MathJax</span><br><span class="line">categories: hexo</span><br><span class="line">date: <span class="number">2020</span><span class="number">-10</span><span class="number">-08</span> <span class="number">09</span>:<span class="number">01</span>:<span class="number">52</span></span><br><span class="line">mathjax: <span class="literal">true</span></span><br><span class="line">tags:</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
+
+
+<p>公式目前测试只能用<code>$$ $$</code>包裹。不支持<code>$ $</code>包裹。前者是块，后者是行。<br>而且还需要在外面套一个<code>&lt;p&gt;</code>标签。原因不明。试出来的。</p>
+<blockquote>
+<p>举例</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">&lt;p align=<span class="string">"left"</span>&gt;</span><br><span class="line">$$\<span class="built_in">begin</span>&#123;aligned&#125;</span><br><span class="line">\sum_&#123;i=<span class="number">0</span>&#125;^N\int_&#123;a&#125;^&#123;b&#125;g(t,i)\<span class="built_in">text</span>&#123;d&#125;t</span><br><span class="line">\<span class="built_in">end</span>&#123;aligned&#125;$$</span><br><span class="line">&lt;/p&gt;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>效果</p>
+</blockquote>
+<p align="left">
+$$\begin{aligned}
+\sum_{i=0}^N\int_{a}^{b}g(t,i)\text{d}t
+\end{aligned}$$
+</p>
+
+<p>其中 <code>\begin{aligned}</code> 是为了多行公式可以对齐。<br>默认是右对齐。</p>
+<p>比如：</p>
+<p align="left">
+$$\begin{aligned}
+a=x_1+x_2+x_3\\
+b=x_4+x_5\\
+c=x_6
+\end{aligned}$$
+</p>
+
+<p>对齐后：</p>
+<p align="left">
+$$\begin{aligned}
+a&=x_1+x_2+x_3\\
+b&=x_4+x_5\\
+c&=x_6
+\end{aligned}$$
+</p>
+
+
+
+
+]]></content>
+      <categories>
+        <category>hexo</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>shell</title>
+    <url>/2020/04/12/shell/</url>
+    <content><![CDATA[<p>记录shell的基本语法、常用的使用技巧等。</p>
+<a id="more"></a>
+
+<p><strong>不一定非得写shell脚本再执行，可以直接执行</strong><br><code>for((i=0;i&lt;10;i++));do echo $i;done</code><br><br><br><strong>xargs cp结合使用</strong><br><code>find . -name &quot;*&quot; | xargs -i cp {}  /home/users/</code><br><br><br><strong>删除除了某个/某些文件外的其他文件</strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&gt;a1.c</span><br><span class="line">&gt;a2.c</span><br><span class="line">&gt;a3.c</span><br><span class="line"></span><br><span class="line">rm -rf !(a1*|a3*)</span><br></pre></td></tr></table></figure>
+<p>结果就是，保留了 <code>a1.c</code>、 <code>a3.c</code>，删除了 <code>a2.c</code> 。<br><br></p>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>platform总线</title>
+    <url>/2020/05/17/platform%E6%80%BB%E7%BA%BF/</url>
+    <content><![CDATA[<p>platform虚拟总线的使用注意事项。</p>
+<a id="more"></a>
+
+
+<h2 id="platform-device的资源"><a href="#platform-device的资源" class="headerlink" title="platform_device的资源"></a>platform_device的资源</h2><p>描述device资源的方式有两种：</p>
+<ul>
+<li>1）<code>resource</code> :<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//arch/arm/mach-cns3xxx/devices.c</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">resource</span> <span class="title">cns3xxx_sdhci_resources</span>[] = &#123;</span></span><br><span class="line">    [<span class="number">0</span>] = &#123;</span><br><span class="line">        .start = CNS3XXX_SDIO_BASE,</span><br><span class="line">        .<span class="built_in">end</span>   = CNS3XXX_SDIO_BASE + SZ_4K - <span class="number">1</span>,</span><br><span class="line">        .flags = IORESOURCE_MEM,</span><br><span class="line">    &#125;,</span><br><span class="line">    [<span class="number">1</span>] = &#123; </span><br><span class="line">        .start = IRQ_CNS3XXX_SDIO,</span><br><span class="line">        .<span class="built_in">end</span>   = IRQ_CNS3XXX_SDIO,</span><br><span class="line">        .flags = IORESOURCE_IRQ,</span><br><span class="line">    &#125;, </span><br><span class="line">&#125;;  </span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> <span class="title">cns3xxx_sdhci_pdev</span> = &#123;</span></span><br><span class="line">    .name       = <span class="string">"sdhci-cns3xxx"</span>,</span><br><span class="line">    .id     = <span class="number">0</span>,</span><br><span class="line">    .num_resources  = ARRAY_SIZE(cns3xxx_sdhci_resources),</span><br><span class="line">    .resource   = cns3xxx_sdhci_resources,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></li>
+<li>2）dev的 <code>platform_data</code> ：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//arch/arm/mach-davinci/board-da850-evm.c</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">gpio_led</span> <span class="title">da850_evm_bb_leds</span>[] = &#123;</span></span><br><span class="line">    [<span class="number">0</span> ... DA850_N_BB_USER_LED - <span class="number">1</span>] = &#123;</span><br><span class="line">        .active_low = <span class="number">1</span>,</span><br><span class="line">        .gpio = <span class="number">-1</span>, <span class="comment">/* assigned at runtime */</span></span><br><span class="line">        .name = <span class="literal">NULL</span>, <span class="comment">/* assigned at runtime */</span></span><br><span class="line">    &#125;, </span><br><span class="line">&#125;;      </span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">gpio_led_platform_data</span> <span class="title">da850_evm_bb_leds_pdata</span> = &#123;</span></span><br><span class="line">    .leds = da850_evm_bb_leds,</span><br><span class="line">    .num_leds = ARRAY_SIZE(da850_evm_bb_leds),</span><br><span class="line">&#125;;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> <span class="title">da850_evm_bb_leds_device</span> = &#123;</span></span><br><span class="line">    .name       = <span class="string">"leds-gpio"</span>,</span><br><span class="line">    .id     = <span class="number">-1</span>, </span><br><span class="line">    .dev = &#123;</span><br><span class="line">        .platform_data = &amp;da850_evm_bb_leds_pdata</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+第二种更加自由，第一种偏向于描述硬件资源。<br>
+
+</li>
+</ul>
+<h2 id="关于platform-device的id"><a href="#关于platform-device的id" class="headerlink" title="关于platform_device的id"></a>关于platform_device的id</h2><blockquote>
+<p>id可以不初始化吗？</p>
+</blockquote>
+<p>如果只有一个device，可以不初始化，默认是0.<br>如果有多个device，必须初始化，且id不能重复。<br>否则会报以下错误：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# insmod led_imx6ull.ko </span><br><span class="line">[ 5711.683557] [bspled_probe] pdev-&gt;id:0</span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# insmod led_imx6ull2.ko </span><br><span class="line">[ 5715.843565] ------------[ cut here ]------------</span><br><span class="line">[ 5715.861461] WARNING: CPU: 0 PID: 379 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x64/0x74</span><br><span class="line">[ 5715.870601] sysfs: cannot create duplicate filename '/devices/platform/bspled.0'</span><br><span class="line">[ 5715.880155] ---[ end trace fff8368841ec45e8 ]---</span><br><span class="line">[ 5715.889641] ------------[ cut here ]------------</span><br><span class="line">[ 5715.894917] WARNING: CPU: 0 PID: 379 at lib/kobject.c:240 kobject_add_internal+0x2cc/0x340</span><br><span class="line">[ 5715.903667] ---[ end trace fff8368841ec45e9 ]---</span><br><span class="line">[ 5715.912608] [imx6ull_bspled_init] platform_device_register fail</span><br><span class="line">insmod: ERROR: could not insert module led_imx6ull2.ko: File exists</span><br></pre></td></tr></table></figure>
+<br>
+
+
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ubuntu问题汇总</title>
+    <url>/2020/04/12/ubuntu%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
+    <content><![CDATA[<p>记录常见的ubuntu使用过程中的问题，包括一些配置等。</p>
+<a id="more"></a>
+
+<h2 id="A-start-job-is-running-for-wait-for-network-to-be-Configured"><a href="#A-start-job-is-running-for-wait-for-network-to-be-Configured" class="headerlink" title="A start job is running for wait for network to be Configured"></a>A start job is running for wait for network to be Configured</h2><p>ubuntu 18.04<br>开机时会卡在这一步，原因应该是网络不通。<br>解决方式：<br><code>vim /etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service</code><br>在[Service]标签下增加：<br><code>TimeoutStartSec=2sec</code><br><br></p>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>以交易为生</title>
+    <url>/2020/10/04/%E4%BB%A5%E4%BA%A4%E6%98%93%E4%B8%BA%E7%94%9F/</url>
+    <content><![CDATA[<p>《以交易为生》的读书笔记。</p>
+<a id="more"></a>
+
+
+<p>一些需要关注的指标。<br>DI、DM、KDJ、ATR、周线。<br>几个都是趋势指标。<br>补充了MACD没有的上下影线、震荡情况。<br>除了日线，周线也需要关注。</p>
+]]></content>
+      <categories>
+        <category>交易</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>串口</title>
+    <url>/2020/04/12/%E4%B8%B2%E5%8F%A3/</url>
+    <content><![CDATA[<p>本post介绍所有的串口。如果后续发现内容过多，不便于浏览，会对内容做拆分。<br>uart、spi、i2c等各单独一个post。</p>
+<a id="more"></a>
+
+<p>串口电平有两种：TTL，RS232（传统的9针串口）。</p>
+]]></content>
+      <categories>
+        <category>bsp</category>
       </categories>
   </entry>
   <entry>
@@ -487,104 +714,6 @@ K&=\frac{2}{N+1}
       </categories>
   </entry>
   <entry>
-    <title>lsof.md</title>
-    <url>/2020/04/26/lsof/</url>
-    <content><![CDATA[<p>lsof</p>
-<a id="more"></a>
-
-<h2 id="lsof"><a href="#lsof" class="headerlink" title="lsof"></a>lsof</h2><p>查看所有打开的文件。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/proc]# lsof --help</span><br><span class="line">BusyBox v1.29.3 (2020-02-20 23:06:49 EST) multi-call binary.</span><br><span class="line"></span><br><span class="line">Usage: lsof </span><br><span class="line"></span><br><span class="line">Show all open files</span><br></pre></td></tr></table></figure>
-<p>执行：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/proc]# lsof</span><br><span class="line">1   /sbin/init  /run/initctl</span><br><span class="line">170 /sbin/syslogd   socket:[2427]</span><br><span class="line">170 /sbin/syslogd   /tmp/auth.log</span><br><span class="line">170 /sbin/syslogd   /tmp/messages</span><br><span class="line">170 /sbin/syslogd   /tmp/user.log</span><br><span class="line">173 /sbin/klogd /proc/kmsg</span><br><span class="line">173 /sbin/klogd socket:[2433]</span><br><span class="line">180 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">180 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">180 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">180 /usr/bin/dbus-daemon    anon_inode:[eventpoll]</span><br><span class="line">180 /usr/bin/dbus-daemon    anon_inode:inotify</span><br><span class="line">180 /usr/bin/dbus-daemon    socket:[2445]</span><br><span class="line">180 /usr/bin/dbus-daemon    socket:[2446]</span><br><span class="line">180 /usr/bin/dbus-daemon    socket:[2447]</span><br><span class="line">180 /usr/bin/dbus-daemon    socket:[2462]</span><br><span class="line">181 /home/myir/mxbackend    /dev/null</span><br><span class="line">181 /home/myir/mxbackend    /dev/console</span><br><span class="line">181 /home/myir/mxbackend    /dev/console</span><br><span class="line">181 /home/myir/mxbackend    socket:[2461]</span><br><span class="line">182 /home/myir/mxapp    /dev/console</span><br><span class="line">182 /home/myir/mxapp    /dev/console</span><br><span class="line">182 /home/myir/mxapp    /dev/console</span><br><span class="line">182 /home/myir/mxapp    /dev/urandom</span><br><span class="line">182 /home/myir/mxapp    anon_inode:[eventfd]</span><br><span class="line">182 /home/myir/mxapp    /dev/fb0</span><br><span class="line">182 /home/myir/mxapp    /dev/tty0</span><br><span class="line">182 /home/myir/mxapp    socket:[2508]</span><br><span class="line">182 /home/myir/mxapp    socket:[2509]</span><br><span class="line">182 /home/myir/mxapp    /dev/input/event1</span><br><span class="line">182 /home/myir/mxapp    socket:[2511]</span><br><span class="line">182 /home/myir/mxapp    socket:[2512]</span><br><span class="line">182 /home/myir/mxapp    /dev/input/event1</span><br><span class="line">182 /home/myir/mxapp    /tmp/qtsingleapp-mxapp-9986-0-lockfile</span><br><span class="line">182 /home/myir/mxapp    socket:[2514]</span><br><span class="line">182 /home/myir/mxapp    /dev/input/event1</span><br><span class="line">182 /home/myir/mxapp    /dev/input/event0</span><br><span class="line">189 /sbin/udevd /dev/null</span><br><span class="line">189 /sbin/udevd /dev/null</span><br><span class="line">189 /sbin/udevd /dev/null</span><br><span class="line">189 /sbin/udevd socket:[2458]</span><br><span class="line">189 /sbin/udevd socket:[2459]</span><br><span class="line">189 /sbin/udevd /dev/kmsg</span><br><span class="line">189 /sbin/udevd anon_inode:inotify</span><br><span class="line">189 /sbin/udevd anon_inode:[signalfd]</span><br><span class="line">189 /sbin/udevd socket:[2470]</span><br><span class="line">189 /sbin/udevd socket:[2471]</span><br><span class="line">189 /sbin/udevd anon_inode:[eventpoll]</span><br><span class="line">221 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">221 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">221 /usr/bin/dbus-daemon    /dev/null</span><br><span class="line">221 /usr/bin/dbus-daemon    anon_inode:[eventpoll]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[2967]</span><br><span class="line">221 /usr/bin/dbus-daemon    anon_inode:inotify</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[2971]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[2972]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[3084]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[3088]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[3123]</span><br><span class="line">221 /usr/bin/dbus-daemon    socket:[3477]</span><br><span class="line">252 /usr/sbin/connmand  /dev/null</span><br><span class="line">252 /usr/sbin/connmand  /dev/null</span><br><span class="line">252 /usr/sbin/connmand  /dev/null</span><br><span class="line">252 /usr/sbin/connmand  anon_inode:[eventfd]</span><br><span class="line">252 /usr/sbin/connmand  anon_inode:[signalfd]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3087]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3091]</span><br><span class="line">252 /usr/sbin/connmand  /dev/urandom</span><br><span class="line">252 /usr/sbin/connmand  anon_inode:inotify</span><br><span class="line">252 /usr/sbin/connmand  anon_inode:inotify</span><br><span class="line">252 /usr/sbin/connmand  socket:[3097]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3119]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3124]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3131]</span><br><span class="line">252 /usr/sbin/connmand  socket:[3135]</span><br><span class="line">252 /usr/sbin/connmand  /var/lib/connman/ethernet_00013f2d3e4d_cable/data</span><br><span class="line">252 /usr/sbin/connmand  socket:[3165]</span><br><span class="line">252 /usr/sbin/connmand  /dev/urandom</span><br><span class="line">252 /usr/sbin/connmand  socket:[3711]</span><br><span class="line">256 /usr/sbin/ofonod    /dev/null</span><br><span class="line">256 /usr/sbin/ofonod    /dev/null</span><br><span class="line">256 /usr/sbin/ofonod    /dev/null</span><br><span class="line">256 /usr/sbin/ofonod    anon_inode:[eventfd]</span><br><span class="line">256 /usr/sbin/ofonod    anon_inode:[eventpoll]</span><br><span class="line">256 /usr/sbin/ofonod    anon_inode:[signalfd]</span><br><span class="line">256 /usr/sbin/ofonod    socket:[3082]</span><br><span class="line">256 /usr/sbin/ofonod    socket:[3083]</span><br><span class="line">256 /usr/sbin/ofonod    socket:[3092]</span><br><span class="line">256 /usr/sbin/ofonod    socket:[3095]</span><br><span class="line">256 /usr/sbin/ofonod    socket:[3099]</span><br><span class="line">262 /usr/sbin/wpa_supplicant    /dev/null</span><br><span class="line">262 /usr/sbin/wpa_supplicant    /dev/null</span><br><span class="line">262 /usr/sbin/wpa_supplicant    /dev/null</span><br><span class="line">262 /usr/sbin/wpa_supplicant    socket:[3476]</span><br><span class="line">262 /usr/sbin/wpa_supplicant    socket:[3487]</span><br><span class="line">262 /usr/sbin/wpa_supplicant    socket:[3488]</span><br><span class="line">262 /usr/sbin/wpa_supplicant    socket:[3489]</span><br><span class="line">262 /usr/sbin/wpa_supplicant    socket:[3490]</span><br><span class="line">265 /usr/sbin/ntpd  /dev/null</span><br><span class="line">265 /usr/sbin/ntpd  /dev/null</span><br><span class="line">265 /usr/sbin/ntpd  /dev/null</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3481]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[5927]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[5928]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3494]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3497]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3502]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3504]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3506]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3507]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3508]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3509]</span><br><span class="line">265 /usr/sbin/ntpd  socket:[3826]</span><br><span class="line">276 /usr/sbin/sshd  /dev/null</span><br><span class="line">276 /usr/sbin/sshd  /dev/null</span><br><span class="line">276 /usr/sbin/sshd  /dev/null</span><br><span class="line">276 /usr/sbin/sshd  socket:[3538]</span><br><span class="line">276 /usr/sbin/sshd  socket:[3541]</span><br><span class="line">288 /usr/sbin/smbd  /dev/null</span><br><span class="line">288 /usr/sbin/smbd  /dev/null</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">288 /usr/sbin/smbd  anon_inode:[eventpoll]</span><br><span class="line">288 /usr/sbin/smbd  /dev/urandom</span><br><span class="line">288 /usr/sbin/smbd  /var/lib/samba/private/secrets.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/msg.lock/288</span><br><span class="line">288 /usr/sbin/smbd  socket:[3584]</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/names.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">288 /usr/sbin/smbd  /dev/null</span><br><span class="line">288 /usr/sbin/smbd  /dev/null</span><br><span class="line">288 /usr/sbin/smbd  /run/samba/smbd.pid</span><br><span class="line">288 /usr/sbin/smbd  pipe:[3585]</span><br><span class="line">288 /usr/sbin/smbd  pipe:[3585]</span><br><span class="line">288 /usr/sbin/smbd  anon_inode:[eventfd]</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/smbXsrv_version_global.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/smbXsrv_client_global.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/smbXsrv_session_global.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/smbXsrv_tcon_global.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/brlock.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/locking.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/leases.tdb</span><br><span class="line">288 /usr/sbin/smbd  /var/lib/samba/share_info.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/gencache.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/gencache_notrans.tdb</span><br><span class="line">288 /usr/sbin/smbd  /var/lib/samba/group_mapping.tdb</span><br><span class="line">288 /usr/sbin/smbd  /var/lib/samba/account_policy.tdb</span><br><span class="line">288 /usr/sbin/smbd  /var/lib/samba/private/passdb.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/smbXsrv_open_global.tdb</span><br><span class="line">288 /usr/sbin/smbd  /tmp/samba/printer_list.tdb</span><br><span class="line">288 /usr/sbin/smbd  pipe:[3614]</span><br><span class="line">288 /usr/sbin/smbd  pipe:[3614]</span><br><span class="line">288 /usr/sbin/smbd  socket:[3615]</span><br><span class="line">288 /usr/sbin/smbd  socket:[3616]</span><br><span class="line">288 /usr/sbin/smbd  socket:[3617]</span><br><span class="line">288 /usr/sbin/smbd  socket:[3618]</span><br><span class="line">291 /usr/sbin/smbd  /dev/null</span><br><span class="line">291 /usr/sbin/smbd  /dev/null</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">291 /usr/sbin/smbd  anon_inode:[eventpoll]</span><br><span class="line">291 /usr/sbin/smbd  /dev/urandom</span><br><span class="line">291 /usr/sbin/smbd  /var/lib/samba/private/secrets.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/msg.lock/291</span><br><span class="line">291 /usr/sbin/smbd  socket:[3598]</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/names.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">291 /usr/sbin/smbd  /dev/null</span><br><span class="line">291 /usr/sbin/smbd  /dev/null</span><br><span class="line">291 /usr/sbin/smbd  /run/samba/smbd.pid</span><br><span class="line">291 /usr/sbin/smbd  pipe:[3585]</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/smbXsrv_version_global.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/smbXsrv_client_global.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/smbXsrv_session_global.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/smbXsrv_tcon_global.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/brlock.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/locking.tdb</span><br><span class="line">291 /usr/sbin/smbd  /tmp/samba/leases.tdb</span><br><span class="line">292 /usr/sbin/smbd  /dev/null</span><br><span class="line">292 /usr/sbin/smbd  /dev/null</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">292 /usr/sbin/smbd  anon_inode:[eventpoll]</span><br><span class="line">292 /usr/sbin/smbd  /dev/urandom</span><br><span class="line">292 /usr/sbin/smbd  /var/lib/samba/private/secrets.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/msg.lock/292</span><br><span class="line">292 /usr/sbin/smbd  socket:[3600]</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/names.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">292 /usr/sbin/smbd  /dev/null</span><br><span class="line">292 /usr/sbin/smbd  /dev/null</span><br><span class="line">292 /usr/sbin/smbd  /run/samba/smbd.pid</span><br><span class="line">292 /usr/sbin/smbd  pipe:[3585]</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/smbXsrv_version_global.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/smbXsrv_client_global.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/smbXsrv_session_global.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/smbXsrv_tcon_global.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/brlock.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/locking.tdb</span><br><span class="line">292 /usr/sbin/smbd  /tmp/samba/leases.tdb</span><br><span class="line">293 /usr/sbin/smbd  /dev/null</span><br><span class="line">293 /usr/sbin/smbd  /dev/null</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">293 /usr/sbin/smbd  anon_inode:[eventpoll]</span><br><span class="line">293 /usr/sbin/smbd  /dev/urandom</span><br><span class="line">293 /usr/sbin/smbd  /var/lib/samba/private/secrets.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/msg.lock/293</span><br><span class="line">293 /usr/sbin/smbd  socket:[3621]</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/names.tdb</span><br><span class="line">293 /usr/sbin/smbd  anon_inode:[eventfd]</span><br><span class="line">293 /usr/sbin/smbd  /dev/null</span><br><span class="line">293 /usr/sbin/smbd  /dev/null</span><br><span class="line">293 /usr/sbin/smbd  /run/samba/smbd.pid</span><br><span class="line">293 /usr/sbin/smbd  pipe:[3585]</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/log.smbd</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/smbXsrv_version_global.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/smbXsrv_client_global.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/smbXsrv_session_global.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/smbXsrv_tcon_global.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/brlock.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/locking.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/leases.tdb</span><br><span class="line">293 /usr/sbin/smbd  /var/lib/samba/share_info.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/gencache.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/gencache_notrans.tdb</span><br><span class="line">293 /usr/sbin/smbd  /var/lib/samba/group_mapping.tdb</span><br><span class="line">293 /usr/sbin/smbd  /var/lib/samba/account_policy.tdb</span><br><span class="line">293 /usr/sbin/smbd  /var/lib/samba/private/passdb.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/smbXsrv_open_global.tdb</span><br><span class="line">293 /usr/sbin/smbd  /tmp/samba/printer_list.tdb</span><br><span class="line">293 /usr/sbin/smbd  pipe:[3614]</span><br><span class="line">294 /usr/sbin/nmbd  /dev/null</span><br><span class="line">294 /usr/sbin/nmbd  /dev/null</span><br><span class="line">294 /usr/sbin/nmbd  /tmp/samba/log.nmbd</span><br><span class="line">294 /usr/sbin/nmbd  /dev/null</span><br><span class="line">294 /usr/sbin/nmbd  anon_inode:[eventpoll]</span><br><span class="line">294 /usr/sbin/nmbd  /tmp/samba/msg.lock/294</span><br><span class="line">294 /usr/sbin/nmbd  /dev/urandom</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3630]</span><br><span class="line">294 /usr/sbin/nmbd  /tmp/samba/names.tdb</span><br><span class="line">294 /usr/sbin/nmbd  /tmp/samba/log.nmbd</span><br><span class="line">294 /usr/sbin/nmbd  /dev/null</span><br><span class="line">294 /usr/sbin/nmbd  /run/samba/nmbd.pid</span><br><span class="line">294 /usr/sbin/nmbd  pipe:[3631]</span><br><span class="line">294 /usr/sbin/nmbd  pipe:[3631]</span><br><span class="line">294 /usr/sbin/nmbd  anon_inode:[eventfd]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3632]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3633]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3804]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3846]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3847]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3848]</span><br><span class="line">294 /usr/sbin/nmbd  socket:[3849]</span><br><span class="line">297 /bin/bash   /dev/ttymxc0</span><br><span class="line">297 /bin/bash   /dev/ttymxc0</span><br><span class="line">297 /bin/bash   /dev/ttymxc0</span><br><span class="line">297 /bin/bash   /dev/ttymxc0</span><br></pre></td></tr></table></figure>
-
-
-]]></content>
-      <categories>
-        <category>系统工具</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>man</title>
-    <url>/2020/04/12/man/</url>
-    <content><![CDATA[<p>记录man的基础知识，常用的指令、系统调用等等的说明。</p>
-<a id="more"></a>
-
-<p><code>man man</code></p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1   Executable programs or shell commands</span><br><span class="line">2   System calls (functions provided by the kernel)</span><br><span class="line">3   Library calls (functions within program libraries)</span><br><span class="line">4   Special files (usually found in &#x2F;dev)</span><br><span class="line">5   File formats and conventions eg &#x2F;etc&#x2F;passwd</span><br><span class="line">6   Games</span><br><span class="line">7   Miscellaneous (including macro packages and conventions), e.g. man(7), groff(7)</span><br><span class="line">8   System administration commands (usually only for root)</span><br><span class="line">9   Kernel routines [Non standard]</span><br></pre></td></tr></table></figure>
-<p>man这本书有9本（默认从第1本开始找，依次往后）：</p>
-<ul>
-<li>第一本讲系统指令<br>比如 <code>man ascii</code> 、<code>man sed</code> 等<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SED(1)                                            User Commands                                            SED(1)</span><br><span class="line"></span><br><span class="line">NAME</span><br><span class="line">       sed - stream editor for filtering and transforming text</span><br></pre></td></tr></table></figure>
-左上角的 <code>SED(1)</code> 这个1就是第几本。</li>
-<li>第二本讲系统调用<br>比如 <code>man 2 open</code> 、 <code>man select</code> 等<br>如果 <code>open</code> 不指定 <code>2</code> ，那么 <code>man</code> 默认查询的是 <code>openvt</code>。<br>而 <code>select</code> 在第一本书中没有类似的。</li>
-<li>[FIX ME]<br>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>platform总线</title>
-    <url>/2020/05/17/platform%E6%80%BB%E7%BA%BF/</url>
-    <content><![CDATA[<p>platform虚拟总线的使用注意事项。</p>
-<a id="more"></a>
-
-
-<h2 id="platform-device的资源"><a href="#platform-device的资源" class="headerlink" title="platform_device的资源"></a>platform_device的资源</h2><p>描述device资源的方式有两种：</p>
-<ul>
-<li>1）<code>resource</code> :<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//arch/arm/mach-cns3xxx/devices.c</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">resource</span> <span class="title">cns3xxx_sdhci_resources</span>[] = &#123;</span></span><br><span class="line">    [<span class="number">0</span>] = &#123;</span><br><span class="line">        .start = CNS3XXX_SDIO_BASE,</span><br><span class="line">        .<span class="built_in">end</span>   = CNS3XXX_SDIO_BASE + SZ_4K - <span class="number">1</span>,</span><br><span class="line">        .flags = IORESOURCE_MEM,</span><br><span class="line">    &#125;,</span><br><span class="line">    [<span class="number">1</span>] = &#123; </span><br><span class="line">        .start = IRQ_CNS3XXX_SDIO,</span><br><span class="line">        .<span class="built_in">end</span>   = IRQ_CNS3XXX_SDIO,</span><br><span class="line">        .flags = IORESOURCE_IRQ,</span><br><span class="line">    &#125;, </span><br><span class="line">&#125;;  </span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> <span class="title">cns3xxx_sdhci_pdev</span> = &#123;</span></span><br><span class="line">    .name       = <span class="string">"sdhci-cns3xxx"</span>,</span><br><span class="line">    .id     = <span class="number">0</span>,</span><br><span class="line">    .num_resources  = ARRAY_SIZE(cns3xxx_sdhci_resources),</span><br><span class="line">    .resource   = cns3xxx_sdhci_resources,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></li>
-<li>2）dev的 <code>platform_data</code> ：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//arch/arm/mach-davinci/board-da850-evm.c</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">gpio_led</span> <span class="title">da850_evm_bb_leds</span>[] = &#123;</span></span><br><span class="line">    [<span class="number">0</span> ... DA850_N_BB_USER_LED - <span class="number">1</span>] = &#123;</span><br><span class="line">        .active_low = <span class="number">1</span>,</span><br><span class="line">        .gpio = <span class="number">-1</span>, <span class="comment">/* assigned at runtime */</span></span><br><span class="line">        .name = <span class="literal">NULL</span>, <span class="comment">/* assigned at runtime */</span></span><br><span class="line">    &#125;, </span><br><span class="line">&#125;;      </span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">gpio_led_platform_data</span> <span class="title">da850_evm_bb_leds_pdata</span> = &#123;</span></span><br><span class="line">    .leds = da850_evm_bb_leds,</span><br><span class="line">    .num_leds = ARRAY_SIZE(da850_evm_bb_leds),</span><br><span class="line">&#125;;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> <span class="title">da850_evm_bb_leds_device</span> = &#123;</span></span><br><span class="line">    .name       = <span class="string">"leds-gpio"</span>,</span><br><span class="line">    .id     = <span class="number">-1</span>, </span><br><span class="line">    .dev = &#123;</span><br><span class="line">        .platform_data = &amp;da850_evm_bb_leds_pdata</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-第二种更加自由，第一种偏向于描述硬件资源。<br>
-
-</li>
-</ul>
-<h2 id="关于platform-device的id"><a href="#关于platform-device的id" class="headerlink" title="关于platform_device的id"></a>关于platform_device的id</h2><blockquote>
-<p>id可以不初始化吗？</p>
-</blockquote>
-<p>如果只有一个device，可以不初始化，默认是0.<br>如果有多个device，必须初始化，且id不能重复。<br>否则会报以下错误：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@imx6ull:/mnt]# insmod led_imx6ull.ko </span><br><span class="line">[ 5711.683557] [bspled_probe] pdev-&gt;id:0</span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# </span><br><span class="line">[root@imx6ull:/mnt]# insmod led_imx6ull2.ko </span><br><span class="line">[ 5715.843565] ------------[ cut here ]------------</span><br><span class="line">[ 5715.861461] WARNING: CPU: 0 PID: 379 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x64/0x74</span><br><span class="line">[ 5715.870601] sysfs: cannot create duplicate filename '/devices/platform/bspled.0'</span><br><span class="line">[ 5715.880155] ---[ end trace fff8368841ec45e8 ]---</span><br><span class="line">[ 5715.889641] ------------[ cut here ]------------</span><br><span class="line">[ 5715.894917] WARNING: CPU: 0 PID: 379 at lib/kobject.c:240 kobject_add_internal+0x2cc/0x340</span><br><span class="line">[ 5715.903667] ---[ end trace fff8368841ec45e9 ]---</span><br><span class="line">[ 5715.912608] [imx6ull_bspled_init] platform_device_register fail</span><br><span class="line">insmod: ERROR: could not insert module led_imx6ull2.ko: File exists</span><br></pre></td></tr></table></figure>
-<br>
-
-
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>printf的宽度、精度变量控制</title>
-    <url>/2020/10/04/printf%E7%9A%84%E5%AE%BD%E5%BA%A6%E3%80%81%E7%B2%BE%E5%BA%A6%E5%8F%98%E9%87%8F%E6%8E%A7%E5%88%B6/</url>
-    <content><![CDATA[<p>算法竞赛中有一题要求保留小数点后<code>x</code>位，<code>x</code>由用户输入。<br>这里需要用到printf的精度变量控制。</p>
-<a id="more"></a>
-
-<p>printf format中可以用<code>*</code>来表示变量。</p>
-<blockquote>
-<p>示例</p>
-</blockquote>
-<h3 id="小数点精度"><a href="#小数点精度" class="headerlink" title="小数点精度"></a>小数点精度</h3><p><code>input</code></p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="number">1</span> <span class="number">6</span> <span class="number">4</span></span><br><span class="line"><span class="number">1</span> <span class="number">0</span> <span class="number">0</span></span><br></pre></td></tr></table></figure>
-<p><code>code</code></p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">while</span> (<span class="number">3</span> == <span class="built_in">scanf</span>(<span class="string">"%d %d %d"</span>, &amp;a, &amp;b, &amp;c) &amp;&amp; a) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%.*lf"</span>,c,(<span class="keyword">double</span>)a/b);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>terminal</code></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">0.1667</span><br></pre></td></tr></table></figure>
-<br>
-
-<h3 id="字符串的宽度-精度"><a href="#字符串的宽度-精度" class="headerlink" title="字符串的宽度+精度"></a>字符串的宽度+精度</h3><p><code>code</code></p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="built_in">string</span> s=<span class="string">"abc123"</span>;</span><br><span class="line"><span class="keyword">int</span> a=<span class="number">10</span>,b=<span class="number">3</span>;</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"%*.*s\n"</span>, a,b, s.c_str());</span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"%-*.*s\n"</span>, a,b, s.c_str());</span><br></pre></td></tr></table></figure>
-<p><code>terminal</code></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">       abc</span><br><span class="line">abc</span><br></pre></td></tr></table></figure>
-<br>
-
-
-
-
-]]></content>
-      <categories>
-        <category>acm</category>
-      </categories>
-  </entry>
-  <entry>
     <title>scanf</title>
     <url>/2020/10/04/scanf/</url>
     <content><![CDATA[<p>关于scanf的返回值。</p>
@@ -610,57 +739,6 @@ K&=\frac{2}{N+1}
       </categories>
   </entry>
   <entry>
-    <title>shell</title>
-    <url>/2020/04/12/shell/</url>
-    <content><![CDATA[<p>记录shell的基本语法、常用的使用技巧等。</p>
-<a id="more"></a>
-
-<p><strong>不一定非得写shell脚本再执行，可以直接执行</strong><br><code>for((i=0;i&lt;10;i++));do echo $i;done</code><br><br><br><strong>xargs cp结合使用</strong><br><code>find . -name &quot;*&quot; | xargs -i cp {}  /home/users/</code><br><br><br><strong>删除除了某个/某些文件外的其他文件</strong></p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&gt;a1.c</span><br><span class="line">&gt;a2.c</span><br><span class="line">&gt;a3.c</span><br><span class="line"></span><br><span class="line">rm -rf !(a1*|a3*)</span><br></pre></td></tr></table></figure>
-<p>结果就是，保留了 <code>a1.c</code>、 <code>a3.c</code>，删除了 <code>a2.c</code> 。<br><br></p>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ubuntu问题汇总</title>
-    <url>/2020/04/12/ubuntu%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
-    <content><![CDATA[<p>记录常见的ubuntu使用过程中的问题，包括一些配置等。</p>
-<a id="more"></a>
-
-<h2 id="A-start-job-is-running-for-wait-for-network-to-be-Configured"><a href="#A-start-job-is-running-for-wait-for-network-to-be-Configured" class="headerlink" title="A start job is running for wait for network to be Configured"></a>A start job is running for wait for network to be Configured</h2><p>ubuntu 18.04<br>开机时会卡在这一步，原因应该是网络不通。<br>解决方式：<br><code>vim /etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service</code><br>在[Service]标签下增加：<br><code>TimeoutStartSec=2sec</code><br><br></p>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>串口</title>
-    <url>/2020/04/12/%E4%B8%B2%E5%8F%A3/</url>
-    <content><![CDATA[<p>本post介绍所有的串口。如果后续发现内容过多，不便于浏览，会对内容做拆分。<br>uart、spi、i2c等各单独一个post。</p>
-<a id="more"></a>
-
-<p>串口电平有两种：TTL，RS232（传统的9针串口）。</p>
-]]></content>
-      <categories>
-        <category>bsp</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>以交易为生</title>
-    <url>/2020/10/04/%E4%BB%A5%E4%BA%A4%E6%98%93%E4%B8%BA%E7%94%9F/</url>
-    <content><![CDATA[<p>《以交易为生》的读书笔记。</p>
-<a id="more"></a>
-
-
-<p>一些需要关注的指标。<br>DI、DM、KDJ、ATR、周线。<br>几个都是趋势指标。<br>补充了MACD没有的上下影线、震荡情况。<br>除了日线，周线也需要关注。</p>
-]]></content>
-      <categories>
-        <category>交易</category>
-      </categories>
-  </entry>
-  <entry>
     <title>墙布墙纸乳胶漆</title>
     <url>/2020/06/28/%E5%A2%99%E5%B8%83%E5%A2%99%E7%BA%B8%E4%B9%B3%E8%83%B6%E6%BC%86/</url>
     <content><![CDATA[<p>家里的墙，交付的是乳胶漆。<br>宁海华东家具的经理建议贴墙布，当然有赚钱的成分在。<br>墙，有3种装饰方式：</p>
@@ -675,6 +753,172 @@ K&=\frac{2}{N+1}
 ]]></content>
       <categories>
         <category>家</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>家具木种</title>
+    <url>/2020/06/27/%E5%AE%B6%E5%85%B7%E6%9C%A8%E7%A7%8D/</url>
+    <content><![CDATA[<p>软装，买家具。颗粒板、多层板、实木板，最后还是选择实木板。毕竟是家，环保第一位，为了亲爱的老婆娃、家人们。<br>实木贵是贵些，但毕竟是可以用10好几年的，买好一些。<br>实木里有拼接的、指接的、榫卯的。后面两种在宁海华东家具没看到，买的拼接的。<br>关于木种，有不少，也做下记录。<br>先记录宁海这次碰到较多的，其他如果有需要再记录。</p>
+<p>关于买成品还是定制。两位经理给的意见都是买成品，定制贵花冤枉钱，而且会让有限的空间看起来更小，更压抑。<br>最后买的都是成品，加上实木，甲醛就不是头痛的点了。</p>
+<a id="more"></a>
+
+<h2 id="木种的档位"><a href="#木种的档位" class="headerlink" title="木种的档位"></a>木种的档位</h2><p><a href="https://www.zhihu.com/question/24335160/answer/465010340" target="_blank" rel="noopener">参考</a></p>
+<ul>
+<li>第一梯队：<br><code>大果紫檀 / 缅甸花梨</code>，最好的红木<br><code>黑胡桃 / 黑核桃 / 北美黑胡桃</code>，完美的家具木材</li>
+<li>第二梯队：<br><code>樱桃木 / 红樱桃 / 黑樱桃；白橡木 / 白栎木；乌金木 / 斑马木白蜡木 / 美国水曲柳；红橡木；刺猬紫檀 / 非洲花梨非洲紫檀 / 亚花梨；水曲柳；欧洲橡木 / 柞木;榆木；榉木 / 山毛榉 / 红榉 ；柚木 / 马来柚木 / 老挝柚木；美国赤杨 / 赤桦 / 北美桤木 / 南美樱桃木；美国黄杨 / 北美鹅掌楸；楸木 / 核桃楸 / 胡桃楸</code></li>
+<li>第三梯队：<br><code>菠萝格 / 印咖木；金丝檀木；胡桃木 / 南美胡桃 / 非洲胡桃 / 金丝胡桃 / 巴新胡桃 / 红胡桃；檀丝木 / 斯文漆木；瑞格楠木；红檀木 / 奥古曼；金丝柚木 / 榄仁木；非洲柚木；南美胡桃木 / 南美樱桃木 / 南美柚木 / 巴西柚木；红椿木；海棠木；金合欢；相思木 / 玫瑰木；橡胶木</code></li>
+<li>第四梯队：<br><code>松木；桦木；桐木</code>，邻居有用松木实木的，松木木质疏松，油脂多有气味，实际上并不适合做家具。但是它确实便宜。邻居同户型做下来7万（杭州的价格，没有包括沙发，餐桌应该，只是柜子。但在杭州算是很便宜了，毕竟实木的）。<br>
+
+
+</li>
+</ul>
+<h2 id="黑胡桃木"><a href="#黑胡桃木" class="headerlink" title="黑胡桃木"></a>黑胡桃木</h2><p>木色是我最喜欢的。算是家具中比较高端的一种木种。<br>宁海华东家具看到的黑胡桃都是北美黑胡桃（没有见过其他黑胡桃）。<code>北美黑胡桃是北美进口材中最贵的</code>。<br>一般是：</p>
+<ul>
+<li>纯黑胡桃</li>
+<li>黑胡桃 + <code>柚木</code></li>
+<li>黑胡桃 + 多层板<br>后两种，是框架用的黑胡桃，其他背板、侧板等用的辅材。</li>
+</ul>
+<p>这种木种很贵，通常是只用它的木皮。但是宁海华东家具的实木确实便宜。<br>以下是摘录：<br>用于桌面、椅面、钢琴表面、汽车内饰、会所装潢。<br>黑胡桃木有极好的着油漆及染料性能（上漆、上木蜡油），抛光后能获得特佳的表面。<br>黑胡桃木家具有良好的尺寸稳定性，抗腐蚀能力极强。<br>密度高，0.66-0.68，红木是0.72。因此黑胡桃木经久耐用、不容易开裂。经得起岁月洗礼。<br><br></p>
+<h2 id="柚木"><a href="#柚木" class="headerlink" title="柚木"></a>柚木</h2><p>就是上面提到的辅材。<br>柚木也有好坏分。缅甸柚木比北美黑胡桃还贵。<br>柚木产地有：缅甸、泰国、印度、印尼、老挝。<br>柚木的颜色没黑胡桃那么暗，有些还偏红。<br>柚木稳定性也非常好。<br><br></p>
+<h2 id="乌金木"><a href="#乌金木" class="headerlink" title="乌金木"></a>乌金木</h2><p>属于比较差的木种。和黑胡桃比起来，家具要便宜很多。<br>容易开裂、腐蚀。<br><br></p>
+]]></content>
+      <categories>
+        <category>家</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>车企</title>
+    <url>/2020/10/11/%E8%BD%A6%E4%BC%81/</url>
+    <content><![CDATA[<p>常见车，以及所属车企。</p>
+<a id="more"></a>
+
+<h2 id="日系"><a href="#日系" class="headerlink" title="日系"></a>日系</h2><h3 id="三菱集团"><a href="#三菱集团" class="headerlink" title="三菱集团"></a>三菱集团</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E4%B8%89%E8%8F%B1.png?raw=true" class="">
+<p>什么都做，采矿、造船、银行、保险、钢铁、玻璃、电气设备、飞机、石油、房地产、汽车。</p>
+<h3 id="丰田汽车"><a href="#丰田汽车" class="headerlink" title="丰田汽车"></a>丰田汽车</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E4%B8%B0%E7%94%B0.png?raw=true" class="">
+
+<h3 id="丰田-皇冠"><a href="#丰田-皇冠" class="headerlink" title="丰田-皇冠"></a>丰田-皇冠</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E7%9A%87%E5%86%A0.png?raw=true" class="">
+
+<h3 id="丰田-雷克萨斯"><a href="#丰田-雷克萨斯" class="headerlink" title="丰田-雷克萨斯"></a>丰田-雷克萨斯</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E9%9B%B7%E5%85%8B%E8%90%A8%E6%96%AF.png?raw=true" class="">
+
+<h3 id="日产（尼桑）"><a href="#日产（尼桑）" class="headerlink" title="日产（尼桑）"></a>日产（尼桑）</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%B0%BC%E6%A1%91.png?raw=true" class="">
+
+<h3 id="日产-英菲尼迪"><a href="#日产-英菲尼迪" class="headerlink" title="日产-英菲尼迪"></a>日产-英菲尼迪</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E8%8B%B1%E8%8F%B2%E5%B0%BC%E8%BF%AA.png?raw=true" class="">
+
+<h3 id="斯巴鲁"><a href="#斯巴鲁" class="headerlink" title="斯巴鲁"></a>斯巴鲁</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E6%96%AF%E5%B7%B4%E9%B2%81.png?raw=true" class="">
+
+<h3 id="本田"><a href="#本田" class="headerlink" title="本田"></a>本田</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E6%9C%AC%E7%94%B0.png?raw=true" class="">
+<p>汽车、摩托车。</p>
+<h3 id="铃木"><a href="#铃木" class="headerlink" title="铃木"></a>铃木</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E9%93%83%E6%9C%A8.png?raw=truhttps://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E9%93%83%E6%9C%A8.png?raw=truee" class="">
+
+<h3 id="马自达"><a href="#马自达" class="headerlink" title="马自达"></a>马自达</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E9%A9%AC%E8%87%AA%E8%BE%BE.png?raw=true" class="">
+<br>
+
+<h2 id="韩系"><a href="#韩系" class="headerlink" title="韩系"></a>韩系</h2><h3 id="现代"><a href="#现代" class="headerlink" title="现代"></a>现代</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E7%8E%B0%E4%BB%A3.png?raw=true" class="">
+<p>国内的有北京现代。中外合资的。</p>
+<h3 id="起亚"><a href="#起亚" class="headerlink" title="起亚"></a>起亚</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E8%B5%B7%E4%BA%9A.png?raw=true" class="">
+<br>
+
+<h2 id="德系"><a href="#德系" class="headerlink" title="德系"></a>德系</h2><h3 id="大众集团"><a href="#大众集团" class="headerlink" title="大众集团"></a>大众集团</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%A4%A7%E4%BC%97.png?raw=true" class="">
+<p>欧洲最大的汽车公司。<br>旗下有：</p>
+<img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%A4%A7%E4%BC%97%E6%97%97%E4%B8%8B%E5%93%81%E7%89%8C.png?raw=true" class="">
+
+<h3 id="大众-保时捷"><a href="#大众-保时捷" class="headerlink" title="大众-保时捷"></a>大众-保时捷</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E4%BF%9D%E6%97%B6%E6%8D%B7.png?raw=true" class="">
+<p>名字取自创始人：费迪南德·保时捷（又译费迪南德·波尔舍，Ferdinand Porsche）。汽车设计大师。<br>现在也属于大众了。</p>
+<h3 id="大众-兰博基尼"><a href="#大众-兰博基尼" class="headerlink" title="大众-兰博基尼"></a>大众-兰博基尼</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%85%B0%E5%8D%9A%E5%9F%BA%E5%B0%BC.png?raw=true" class="">
+<p>意大利的。名字取自创始人：费鲁吉欧·兰博基尼。<br>已经破产，被奥迪收了，也就是现在兰博基尼属于大众集团的车。（奥迪是大众子公司）</p>
+<h3 id="大众-奥迪"><a href="#大众-奥迪" class="headerlink" title="大众-奥迪"></a>大众-奥迪</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%A5%A5%E8%BF%AA.png?raw=true" class="">
+
+<h3 id="大众-宾利"><a href="#大众-宾利" class="headerlink" title="大众-宾利"></a>大众-宾利</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%AE%BE%E5%88%A9.png?raw=true" class="">
+<p>英国的。被大众收了。</p>
+<h3 id="大众-布加迪"><a href="#大众-布加迪" class="headerlink" title="大众-布加迪"></a>大众-布加迪</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%B8%83%E5%8A%A0%E8%BF%AA.png?raw=true" class="">
+<p>意大利的。被大众收了。总部设在法国。跑车。</p>
+<h3 id="奔驰"><a href="#奔驰" class="headerlink" title="奔驰"></a>奔驰</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%A5%94%E9%A9%B0.png?raw=true" class="">
+<p>全程，梅赛德斯-奔驰（Mercedes-Benz）。戴姆勒梅赛德斯奔驰汽车公司。</p>
+<h3 id="奔驰-迈巴赫（梅赛德斯-迈巴赫）"><a href="#奔驰-迈巴赫（梅赛德斯-迈巴赫）" class="headerlink" title="奔驰-迈巴赫（梅赛德斯-迈巴赫）"></a>奔驰-迈巴赫（梅赛德斯-迈巴赫）</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E8%BF%88%E5%B7%B4%E8%B5%AB.png?raw=true" class="">
+<p>迈巴赫被奔驰收购了。</p>
+<h3 id="宝马（BMW集团）"><a href="#宝马（BMW集团）" class="headerlink" title="宝马（BMW集团）"></a>宝马（BMW集团）</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%AE%9D%E9%A9%AC.png?raw=true" class="">
+
+<h3 id="宝马-宝马mini"><a href="#宝马-宝马mini" class="headerlink" title="宝马-宝马mini"></a>宝马-宝马mini</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%AE%9D%E9%A9%ACmini.png?raw=true" class="">
+<p>英国的，被宝马收了。做微型车的。<br><br></p>
+<h2 id="美系"><a href="#美系" class="headerlink" title="美系"></a>美系</h2><h3 id="通用汽车"><a href="#通用汽车" class="headerlink" title="通用汽车"></a>通用汽车</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E7%BE%8E%E5%9B%BD%E9%80%9A%E7%94%A8%E6%B1%BD%E8%BD%A6.png?raw=true" class="">
+
+<h3 id="通用-凯迪拉克"><a href="#通用-凯迪拉克" class="headerlink" title="通用-凯迪拉克"></a>通用-凯迪拉克</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%87%AF%E8%BF%AA%E6%8B%89%E5%85%8B.png?raw=true" class="">
+
+<h3 id="通用-别克"><a href="#通用-别克" class="headerlink" title="通用-别克"></a>通用-别克</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%88%AB%E5%85%8B.png?raw=true" class="">
+
+<h3 id="通用-雪佛兰"><a href="#通用-雪佛兰" class="headerlink" title="通用-雪佛兰"></a>通用-雪佛兰</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E9%9B%AA%E4%BD%9B%E5%85%B0.png?raw=true" class="">
+
+<h3 id="克莱斯勒"><a href="#克莱斯勒" class="headerlink" title="克莱斯勒"></a>克莱斯勒</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%85%8B%E8%8E%B1%E6%96%AF%E5%8B%92.png?raw=true" class="">
+
+<h3 id="克莱斯勒-吉普"><a href="#克莱斯勒-吉普" class="headerlink" title="克莱斯勒-吉普"></a>克莱斯勒-吉普</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%90%89%E6%99%AE.png?raw=true" class="">
+
+<h3 id="克莱斯勒-玛莎拉蒂"><a href="#克莱斯勒-玛莎拉蒂" class="headerlink" title="克莱斯勒-玛莎拉蒂"></a>克莱斯勒-玛莎拉蒂</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E7%8E%9B%E8%8E%8E%E6%8B%89%E8%92%82.png?raw=true" class="">
+<p>意大利的。被克莱斯勒收了。</p>
+<h3 id="悍马"><a href="#悍马" class="headerlink" title="悍马"></a>悍马</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E6%82%8D%E9%A9%AC.png?raw=true" class="">
+
+<h3 id="福特"><a href="#福特" class="headerlink" title="福特"></a>福特</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E7%A6%8F%E7%89%B9.png?raw=true" class="">
+
+<h3 id="福特-林肯"><a href="#福特-林肯" class="headerlink" title="福特-林肯"></a>福特-林肯</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E6%9E%97%E8%82%AF.png?raw=true" class="">
+
+<h3 id="特斯拉"><a href="#特斯拉" class="headerlink" title="特斯拉"></a>特斯拉</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E7%89%B9%E6%96%AF%E6%8B%89.png?raw=true" class="">
+<br>
+
+<h2 id="英系"><a href="#英系" class="headerlink" title="英系"></a>英系</h2><h3 id="劳斯莱斯"><a href="#劳斯莱斯" class="headerlink" title="劳斯莱斯"></a>劳斯莱斯</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%8A%B3%E6%96%AF%E8%8E%B1%E6%96%AF.png?raw=true" class="">
+<p>名字取自公司创始人Frederick Henry Royce（亨利·莱斯）和Charles Stewart Rolls（查理·劳斯）。</p>
+<h3 id="捷豹"><a href="#捷豹" class="headerlink" title="捷豹"></a>捷豹</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E6%8D%B7%E8%B1%B9.png?raw=true" class="">
+<p>跑车。<br><br></p>
+<h2 id="印系（印度）"><a href="#印系（印度）" class="headerlink" title="印系（印度）"></a>印系（印度）</h2><h3 id="塔塔汽车集团"><a href="#塔塔汽车集团" class="headerlink" title="塔塔汽车集团"></a>塔塔汽车集团</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%A1%94%E5%A1%94.png?raw=true" class="">
+
+<h3 id="塔塔-路虎"><a href="#塔塔-路虎" class="headerlink" title="塔塔-路虎"></a>塔塔-路虎</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E8%B7%AF%E8%99%8E.png?raw=true" class="">
+<p>全地形SUV。总部是在英国。也算是英国的车。从福特公司手中收购的。<br><br></p>
+<h2 id="法系"><a href="#法系" class="headerlink" title="法系"></a>法系</h2><h3 id="标致雪铁龙集团"><a href="#标致雪铁龙集团" class="headerlink" title="标致雪铁龙集团"></a>标致雪铁龙集团</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E6%A0%87%E8%87%B4.png?raw=true" class="">
+<p>标致吞并了雪铁龙，变成了标致雪铁龙。</p>
+<h3 id="标致雪铁龙-雪铁龙"><a href="#标致雪铁龙-雪铁龙" class="headerlink" title="标致雪铁龙-雪铁龙"></a>标致雪铁龙-雪铁龙</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E9%9B%AA%E9%93%81%E9%BE%99.png?raw=true" class="">
+
+<h3 id="雷诺"><a href="#雷诺" class="headerlink" title="雷诺"></a>雷诺</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E9%9B%B7%E8%AF%BA.png?raw=true" class="">
+<br>
+
+<h2 id="意系（意大利）"><a href="#意系（意大利）" class="headerlink" title="意系（意大利）"></a>意系（意大利）</h2><h3 id="法拉利"><a href="#法拉利" class="headerlink" title="法拉利"></a>法拉利</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E6%B3%95%E6%8B%89%E5%88%A9.png?raw=true" class="">
+<p>一级方程式赛车、跑车。<br><br></p>
+<h2 id="国产"><a href="#国产" class="headerlink" title="国产"></a>国产</h2><h3 id="东风汽车"><a href="#东风汽车" class="headerlink" title="东风汽车"></a>东风汽车</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E4%B8%9C%E9%A3%8E%E6%B1%BD%E8%BD%A6.png?raw=true" class="">
+<p>中国四大汽车集团之一。（东风、一汽、上汽、长安）</p>
+<img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E4%B8%AD%E5%9B%BD%E5%9B%9B%E5%A4%A7%E6%B1%BD%E8%BD%A6%E9%9B%86%E5%9B%A2.png?raw=true" class="">
+
+<h3 id="华晨汽车集团"><a href="#华晨汽车集团" class="headerlink" title="华晨汽车集团"></a>华晨汽车集团</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E4%B8%AD%E5%8D%8E.png?raw=true" class="">
+<p>底下有中华、华晨宝马。</p>
+<h3 id="中国一汽"><a href="#中国一汽" class="headerlink" title="中国一汽"></a>中国一汽</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E4%B8%AD%E5%9B%BD%E4%B8%80%E6%B1%BD.png?raw=true" class="">
+<p>中国四大汽车集团之一。（东风、一汽、上汽、长安）<br>有一汽大众、一汽丰田、一汽奥迪等等。</p>
+<h3 id="一汽-红旗"><a href="#一汽-红旗" class="headerlink" title="一汽-红旗"></a>一汽-红旗</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E7%BA%A2%E6%97%97.png?raw=true" class="">
+
+<h3 id="五菱汽车"><a href="#五菱汽车" class="headerlink" title="五菱汽车"></a>五菱汽车</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E4%BA%94%E8%8F%B1.png?raw=true" class="">
+<p>和三菱毛关系没有。</p>
+<h3 id="众泰汽车"><a href="#众泰汽车" class="headerlink" title="众泰汽车"></a>众泰汽车</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E4%BC%97%E6%B3%B0.png?raw=true" class="">
+<p>浙江的。</p>
+<h3 id="前途汽车"><a href="#前途汽车" class="headerlink" title="前途汽车"></a>前途汽车</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%89%8D%E9%80%94%E6%B1%BD%E8%BD%A6.png?raw=true" class="">
+<p>电动车。</p>
+<h3 id="北京汽车"><a href="#北京汽车" class="headerlink" title="北京汽车"></a>北京汽车</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%8C%97%E4%BA%AC%E6%B1%BD%E8%BD%A6.png?raw=true" class="">
+
+<h3 id="吉利汽车"><a href="#吉利汽车" class="headerlink" title="吉利汽车"></a>吉利汽车</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%90%89%E5%88%A9.png?raw=true" class="">
+<p>浙江宁波的。把沃尔沃收购了。</p>
+<h3 id="吉利-沃尔沃"><a href="#吉利-沃尔沃" class="headerlink" title="吉利-沃尔沃"></a>吉利-沃尔沃</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E6%B2%83%E5%B0%94%E6%B2%83.png?raw=true" class="">
+<p>瑞典的。先被福特收了。现在属于吉利。</p>
+<h3 id="长城汽车"><a href="#长城汽车" class="headerlink" title="长城汽车"></a>长城汽车</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E9%95%BF%E5%9F%8E.png?raw=true" class="">
+
+<h3 id="长城-哈弗"><a href="#长城-哈弗" class="headerlink" title="长城-哈弗"></a>长城-哈弗</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%93%88%E5%BC%97.png?raw=true" class="">
+<p>长城汽车子品牌。SUV。</p>
+<h3 id="奇瑞"><a href="#奇瑞" class="headerlink" title="奇瑞"></a>奇瑞</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%A5%87%E7%91%9E.png?raw=true" class="">
+
+<h3 id="小鹏汽车"><a href="#小鹏汽车" class="headerlink" title="小鹏汽车"></a>小鹏汽车</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%B0%8F%E9%B9%8F%E6%B1%BD%E8%BD%A6.png?raw=true" class="">
+<p>广州的。做电动车的。</p>
+<h3 id="广汽传祺"><a href="#广汽传祺" class="headerlink" title="广汽传祺"></a>广汽传祺</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E5%B9%BF%E6%B1%BD%E4%BC%A0%E7%A5%BA.png?raw=true" class="">
+<p>广汽的。</p>
+<h3 id="比亚迪"><a href="#比亚迪" class="headerlink" title="比亚迪"></a>比亚迪</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E6%AF%94%E4%BA%9A%E8%BF%AA.png?raw=true" class="">
+<p>深圳的。电动车。</p>
+<h3 id="蔚来"><a href="#蔚来" class="headerlink" title="蔚来"></a>蔚来</h3><img src="https://github.com/gouchengsanren/images/blob/master/blog/auto-logo-%E8%94%9A%E6%9D%A5.png?raw=true" class="">
+<p>安徽的。电动车。<br><br></p>
+]]></content>
+      <categories>
+        <category>汽车</category>
       </categories>
   </entry>
   <entry>
@@ -916,97 +1160,6 @@ K&=\frac{2}{N+1}
 ]]></content>
       <categories>
         <category>家</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>家具木种</title>
-    <url>/2020/06/27/%E5%AE%B6%E5%85%B7%E6%9C%A8%E7%A7%8D/</url>
-    <content><![CDATA[<p>软装，买家具。颗粒板、多层板、实木板，最后还是选择实木板。毕竟是家，环保第一位，为了亲爱的老婆娃、家人们。<br>实木贵是贵些，但毕竟是可以用10好几年的，买好一些。<br>实木里有拼接的、指接的、榫卯的。后面两种在宁海华东家具没看到，买的拼接的。<br>关于木种，有不少，也做下记录。<br>先记录宁海这次碰到较多的，其他如果有需要再记录。</p>
-<p>关于买成品还是定制。两位经理给的意见都是买成品，定制贵花冤枉钱，而且会让有限的空间看起来更小，更压抑。<br>最后买的都是成品，加上实木，甲醛就不是头痛的点了。</p>
-<a id="more"></a>
-
-<h2 id="木种的档位"><a href="#木种的档位" class="headerlink" title="木种的档位"></a>木种的档位</h2><p><a href="https://www.zhihu.com/question/24335160/answer/465010340" target="_blank" rel="noopener">参考</a></p>
-<ul>
-<li>第一梯队：<br><code>大果紫檀 / 缅甸花梨</code>，最好的红木<br><code>黑胡桃 / 黑核桃 / 北美黑胡桃</code>，完美的家具木材</li>
-<li>第二梯队：<br><code>樱桃木 / 红樱桃 / 黑樱桃；白橡木 / 白栎木；乌金木 / 斑马木白蜡木 / 美国水曲柳；红橡木；刺猬紫檀 / 非洲花梨非洲紫檀 / 亚花梨；水曲柳；欧洲橡木 / 柞木;榆木；榉木 / 山毛榉 / 红榉 ；柚木 / 马来柚木 / 老挝柚木；美国赤杨 / 赤桦 / 北美桤木 / 南美樱桃木；美国黄杨 / 北美鹅掌楸；楸木 / 核桃楸 / 胡桃楸</code></li>
-<li>第三梯队：<br><code>菠萝格 / 印咖木；金丝檀木；胡桃木 / 南美胡桃 / 非洲胡桃 / 金丝胡桃 / 巴新胡桃 / 红胡桃；檀丝木 / 斯文漆木；瑞格楠木；红檀木 / 奥古曼；金丝柚木 / 榄仁木；非洲柚木；南美胡桃木 / 南美樱桃木 / 南美柚木 / 巴西柚木；红椿木；海棠木；金合欢；相思木 / 玫瑰木；橡胶木</code></li>
-<li>第四梯队：<br><code>松木；桦木；桐木</code>，邻居有用松木实木的，松木木质疏松，油脂多有气味，实际上并不适合做家具。但是它确实便宜。邻居同户型做下来7万（杭州的价格，没有包括沙发，餐桌应该，只是柜子。但在杭州算是很便宜了，毕竟实木的）。<br>
-
-
-</li>
-</ul>
-<h2 id="黑胡桃木"><a href="#黑胡桃木" class="headerlink" title="黑胡桃木"></a>黑胡桃木</h2><p>木色是我最喜欢的。算是家具中比较高端的一种木种。<br>宁海华东家具看到的黑胡桃都是北美黑胡桃（没有见过其他黑胡桃）。<code>北美黑胡桃是北美进口材中最贵的</code>。<br>一般是：</p>
-<ul>
-<li>纯黑胡桃</li>
-<li>黑胡桃 + <code>柚木</code></li>
-<li>黑胡桃 + 多层板<br>后两种，是框架用的黑胡桃，其他背板、侧板等用的辅材。</li>
-</ul>
-<p>这种木种很贵，通常是只用它的木皮。但是宁海华东家具的实木确实便宜。<br>以下是摘录：<br>用于桌面、椅面、钢琴表面、汽车内饰、会所装潢。<br>黑胡桃木有极好的着油漆及染料性能（上漆、上木蜡油），抛光后能获得特佳的表面。<br>黑胡桃木家具有良好的尺寸稳定性，抗腐蚀能力极强。<br>密度高，0.66-0.68，红木是0.72。因此黑胡桃木经久耐用、不容易开裂。经得起岁月洗礼。<br><br></p>
-<h2 id="柚木"><a href="#柚木" class="headerlink" title="柚木"></a>柚木</h2><p>就是上面提到的辅材。<br>柚木也有好坏分。缅甸柚木比北美黑胡桃还贵。<br>柚木产地有：缅甸、泰国、印度、印尼、老挝。<br>柚木的颜色没黑胡桃那么暗，有些还偏红。<br>柚木稳定性也非常好。<br><br></p>
-<h2 id="乌金木"><a href="#乌金木" class="headerlink" title="乌金木"></a>乌金木</h2><p>属于比较差的木种。和黑胡桃比起来，家具要便宜很多。<br>容易开裂、腐蚀。<br><br></p>
-]]></content>
-      <categories>
-        <category>家</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>hexo中使用MathJax</title>
-    <url>/2020/10/08/hexo%E4%B8%AD%E4%BD%BF%E7%94%A8MathJax/</url>
-    <content><![CDATA[<p>一些交易指标的公式编写，需要用到MathJax引擎。<br>记录hexo中如何使用它。</p>
-<a id="more"></a>
-<br>
-
-<p>直接插入js脚本是不行的。<br>比如：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">&lt;script type=<span class="string">"text/javascript"</span> src=<span class="string">"http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"</span>&gt;&lt;/script&gt;</span><br></pre></td></tr></table></figure>
-<p>本地 <code>hexo s</code> 运行良好，但 <code>hexo d</code> 部署上去，是无法显示公式的。</p>
-<p>其实hexo的主题，比如我在用的next是自带mathjax支持的，只需要使能它。</p>
-<p>使能MathJax：<br><code>./themes/next/_config.yml</code></p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">505</span>   mathjax:</span><br><span class="line"><span class="number">506</span>     enable: <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<p>在post头添加一行：<br><code>mathjax: true</code><br>即：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: hexo中使用MathJax</span><br><span class="line">categories: hexo</span><br><span class="line">date: <span class="number">2020</span><span class="number">-10</span><span class="number">-08</span> <span class="number">09</span>:<span class="number">01</span>:<span class="number">52</span></span><br><span class="line">mathjax: <span class="literal">true</span></span><br><span class="line">tags:</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
-
-
-<p>公式目前测试只能用<code>$$ $$</code>包裹。不支持<code>$ $</code>包裹。前者是块，后者是行。<br>而且还需要在外面套一个<code>&lt;p&gt;</code>标签。原因不明。试出来的。</p>
-<blockquote>
-<p>举例</p>
-</blockquote>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">&lt;p align=<span class="string">"left"</span>&gt;</span><br><span class="line">$$\<span class="built_in">begin</span>&#123;aligned&#125;</span><br><span class="line">\sum_&#123;i=<span class="number">0</span>&#125;^N\int_&#123;a&#125;^&#123;b&#125;g(t,i)\<span class="built_in">text</span>&#123;d&#125;t</span><br><span class="line">\<span class="built_in">end</span>&#123;aligned&#125;$$</span><br><span class="line">&lt;/p&gt;</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>效果</p>
-</blockquote>
-<p align="left">
-$$\begin{aligned}
-\sum_{i=0}^N\int_{a}^{b}g(t,i)\text{d}t
-\end{aligned}$$
-</p>
-
-<p>其中 <code>\begin{aligned}</code> 是为了多行公式可以对齐。<br>默认是右对齐。</p>
-<p>比如：</p>
-<p align="left">
-$$\begin{aligned}
-a=x_1+x_2+x_3\\
-b=x_4+x_5\\
-c=x_6
-\end{aligned}$$
-</p>
-
-<p>对齐后：</p>
-<p align="left">
-$$\begin{aligned}
-a&=x_1+x_2+x_3\\
-b&=x_4+x_5\\
-c&=x_6
-\end{aligned}$$
-</p>
-
-
-
-
-]]></content>
-      <categories>
-        <category>hexo</category>
       </categories>
   </entry>
 </search>
