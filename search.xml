@@ -1174,4 +1174,54 @@ c&=x_6
         <category>家</category>
       </categories>
   </entry>
+  <entry>
+    <title>RSI</title>
+    <url>/2020/10/17/RSI/</url>
+    <content><![CDATA[<p>RSI指标的公式和含义。</p>
+<blockquote>
+<p>注，我用的行情软件是老虎，公式都是对应老虎里的。</p>
+</blockquote>
+<a id="more"></a>
+<br>
+
+<h3 id="含义"><a href="#含义" class="headerlink" title="含义"></a>含义</h3><p>直译是相对强度指标。<br>用的相对少，包括雷公也是没见过他用这个指标。</p>
+<p>特点：</p>
+<ul>
+<li><code>震荡</code>指标</li>
+<li>只研究<code>收盘价</code></li>
+<li><code>不滞后</code></li>
+<li>研究的是<code>价格的波动</code>，注意<code>不是涨跌幅的波动</code>。是价格的绝对值。</li>
+</ul>
+<h3 id="公式"><a href="#公式" class="headerlink" title="公式"></a>公式</h3><blockquote>
+<p>老虎自带公式</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//前一个交易日的收盘价</span></span><br><span class="line">LC:=REF(CLOSE,<span class="number">1</span>);</span><br><span class="line"><span class="comment">//如果涨了，temp1就是涨的值，否则就是0</span></span><br><span class="line">TEMP1:=MAX(CLOSE-LC,<span class="number">0</span>);</span><br><span class="line"><span class="comment">//temp2，今日和前一个交易日收盘价差值的绝对值</span></span><br><span class="line">TEMP2:=ABS(CLOSE-LC);</span><br><span class="line"><span class="comment">//也就是说：</span></span><br><span class="line"><span class="comment">//如果涨了，temp1=temp2等于C-LC</span></span><br><span class="line"><span class="comment">//如果跌了，temp1=0，temp2等于LC-C</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//P1:6, P2:12, P3:24</span></span><br><span class="line"><span class="comment">//RSI：temp1的EMA（只不过这里权重系数的分子是1，也就是原来是2/(N+1)，现在是1/(N+1)，权重调小了</span></span><br><span class="line">RSI1:SMA(TEMP1,P1,<span class="number">1</span>)/SMA(TEMP2,P1,<span class="number">1</span>)*<span class="number">100</span>,COLORFFFFFF;</span><br><span class="line">RSI2:SMA(TEMP1,P2,<span class="number">1</span>)/SMA(TEMP2,P2,<span class="number">1</span>)*<span class="number">100</span>,COLORFF00FF;</span><br><span class="line">RSI3:SMA(TEMP1,P3,<span class="number">1</span>)/SMA(TEMP2,P3,<span class="number">1</span>)*<span class="number">100</span>,COLOR00FFFF;</span><br></pre></td></tr></table></figure>
+<p>这个指标比较难理解。<br>我们举个例子看，取RSI1,6日。<br>如果上一个交易日rsi=50，那么SMA(TEMP1,6,1)/SMA(TEMP2,6,1)=0.5，假设分别是0.5和1好了，简单点。<br>假设今天是涨的，涨了1，那么temp1=temp2=1.<br>即：</p>
+<p align="left">
+$$\begin{aligned}
+RSI&=\frac{SMA(TEMP1,6,1)}{SMA(TEMP2,6,1)}\\
+   &=\frac{1*\frac{1}{6+1}+REF(EMA(TEMP1),1)*{(1-\frac{1}{6+1})}}{1*\frac{1}{6+1}+REF(EMA(TEMP2),1)*{(1-\frac{1}{6+1})}}\\
+   &=\frac{1*\frac{1}{7}+REF(EMA(TEMP1),1)*\frac{6}{7}}{1*\frac{1}{7}+REF(EMA(TEMP2),1)*\frac{6}{7}}\\
+   &=\frac{1*\frac{1}{7}+0.5*\frac{6}{7}}{1*\frac{1}{7}+1*\frac{6}{7}}\\
+   &=\frac{4}{7}
+\end{aligned}$$
+</p>
+
+<p>也就是涨了1块后，SMA(TEMP1,6,1)从<code>1/2</code>变成了<code>4/7</code>,SMA(TEMP2,6,1)仍然是<code>1</code>。<br>我们再假如又跌了1块。那么temp1=0，temp2=1.</p>
+<p align="left">
+$$\begin{aligned}
+RSI&=\frac{SMA(TEMP1,6,1)}{SMA(TEMP2,6,1)}\\
+   &=\frac{0*\frac{1}{7}+\frac{4}{7}*\frac{6}{7}}{1*\frac{1}{7}+1*\frac{6}{7}}\\
+   &=\frac{24}{49}
+\end{aligned}$$
+</p>
+
+<p>也就是跌了1块后，SMA(TEMP1,6,1)从<code>4/7</code>变成了<code>24/49</code>,SMA(TEMP2,6,1)仍然是<code>1</code>。</p>
+<p><strong>这里就有意思了，涨了1块，再跌一块，RSI从原来的<code>50%</code>变成了<code>&lt;50%</code></strong><br>换句话说，如果想让RSI回到原来的<code>50%</code>，并不需要跌1块钱，只需要跌不到1块钱。<br>这其实也就是为什么股价上升期，通过回调RSI，股价还能上去的原因。<br>反之，跌也是一样的。通过回调RSI，股价还能一路向下。</p>
+<p>如果我们考虑极端情况，如果一直涨，分子就会逐渐靠近分母，最后RSI=1。<br>反之，如果一直跌，分子会逐渐趋向于0，最后RSI=0.</p>
+]]></content>
+      <categories>
+        <category>交易</category>
+      </categories>
+  </entry>
 </search>
