@@ -1224,4 +1224,44 @@ RSI&=\frac{SMA(TEMP1,6,1)}{SMA(TEMP2,6,1)}\\
         <category>交易</category>
       </categories>
   </entry>
+  <entry>
+    <title>裸机led</title>
+    <url>/2020/11/15/%E8%A3%B8%E6%9C%BAled/</url>
+    <content><![CDATA[<p>imax6ull led裸机程序。</p>
+<a id="more"></a>
+
+<h2 id="烧写-验证"><a href="#烧写-验证" class="headerlink" title="烧写-验证"></a>烧写-验证</h2><p>烧写用100ask的烧写工具。<br>用专业版。<br>基础版只能烧写到emmc，但是不能运行。得把拨码调成emmc启动，才能看到效果，拨来拨去效率太低。<br>用专业版可以直接运行（不烧写，直接运行），方便很多。</p>
+<p>工具只支持imx格式的，所以必须得做成imx格式。<br>通过以下命令：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">./tools/mkimage -n ./tools/imximage.cfg.cfgtmp -T imximage -e 0x80100000 -d led.bin led.imx</span><br></pre></td></tr></table></figure>
+<p>含义不明，先会用。<br><br></p>
+<h2 id="Makefile"><a href="#Makefile" class="headerlink" title="Makefile"></a>Makefile</h2><p>先看makefile怎么写。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">CROSS_COMPILE=arm-linux-gnueabihf-</span><br><span class="line">CC=$(CROSS_COMPILE)gcc</span><br><span class="line">LD=$(CROSS_COMPILE)ld</span><br><span class="line">AR=$(CROSS_COMPILE)ar</span><br><span class="line">OBJCOPY=$(CROSS_COMPILE)objcopy</span><br><span class="line"></span><br><span class="line">led.imx:start.S led.c main.c</span><br><span class="line">	$(CC) -g -c -o start.o start.S</span><br><span class="line">	$(CC) -g -c -o led.o led.c</span><br><span class="line">	$(CC) -g -c -o main.o main.c</span><br><span class="line">	$(LD) -T imx6ull.lds -g start.o led.o main.o -o led.elf</span><br><span class="line">	$(OBJCOPY) -O binary -S led.elf led.bin</span><br><span class="line">	./mkimage -n imximage.cfg.cfgtmp -T imximage -e <span class="number">0x80100000</span> -d led.bin led.imx</span><br><span class="line"></span><br><span class="line">clean:</span><br><span class="line">	rm -rf *.dis *.bin *.elf *.imx *.img *.o</span><br></pre></td></tr></table></figure>
+<p>这边有几行暂时看不懂。</p>
+<ul>
+<li>ld -T imx6ull.lds，指定了一个连接文件，最后生成的文件格式为elf，elf又是什么格式</li>
+<li>objcopy到底干嘛的</li>
+<li>mkimage就更看不懂了</li>
+</ul>
+<br>
+
+<h2 id="led-c实现"><a href="#led-c实现" class="headerlink" title="led c实现"></a>led c实现</h2><p>就是c代码，和内核下没什么区别。<br>但有一个疑问：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">volatile</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> *ccm_ccgr1;</span><br><span class="line">ccm_ccgr1 = (<span class="keyword">volatile</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> *)<span class="number">0x20c406c</span>;</span><br><span class="line">*ccm_ccgr1 |= (<span class="number">3</span>&lt;&lt;<span class="number">30</span>);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>为什么可以直接寄存器地址取址，然后操作就是写寄存器操作？？</p>
+</blockquote>
+<h2 id="汇编部分"><a href="#汇编部分" class="headerlink" title="汇编部分"></a>汇编部分</h2><p>一个c程序要跑起来，总得初始化c的堆栈吧，但是这个是裸机啊。它这个堆栈的初始化在哪里？<br>示例程序中有个start.S，是这个吗？</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">.<span class="built_in">text</span></span><br><span class="line">.global  _start</span><br><span class="line"></span><br><span class="line">_start: 				</span><br><span class="line">	ldr  sp,=<span class="number">0x80200000</span></span><br><span class="line">	bl clean_bss</span><br><span class="line">	bl main</span><br><span class="line"></span><br><span class="line">halt:</span><br><span class="line">	b  halt </span><br><span class="line"></span><br><span class="line">clean_bss:</span><br><span class="line">	ldr r1, =__bss_start</span><br><span class="line">	ldr r2, =__bss_end</span><br><span class="line">	mov r3, #<span class="number">0</span></span><br><span class="line">clean:</span><br><span class="line">	str r3, [r1]</span><br><span class="line">	add r1, r1, #<span class="number">4</span></span><br><span class="line">	cmp r1, r2</span><br><span class="line">	bne clean</span><br><span class="line">	</span><br><span class="line">	mov pc, lr</span><br></pre></td></tr></table></figure>
+<p>看不懂。<br><br></p>
+<h2 id="不用c，直接用汇编实现这个led程序"><a href="#不用c，直接用汇编实现这个led程序" class="headerlink" title="不用c，直接用汇编实现这个led程序"></a>不用c，直接用汇编实现这个led程序</h2><p>报错：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">led.S:9: Error: only D registers may be indexed -- `str r1 [r0]'</span><br></pre></td></tr></table></figure>
+<p>对应的代码是：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* enable gpio5 */</span></span><br><span class="line">ldr r0, =<span class="number">0x020c406c</span></span><br><span class="line">ldr r1, =<span class="number">0xC0000000</span></span><br><span class="line">str r1 [r0]</span><br></pre></td></tr></table></figure>
+<p>原因是语法错误，<code>str r1, [r0]</code> 少个逗号。<br>整个程序：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">.<span class="built_in">text</span></span><br><span class="line">.global _start</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line">    <span class="comment">/* enable gpio5 */</span></span><br><span class="line">    ldr r0, =<span class="number">0x020c406c</span></span><br><span class="line">    ldr r1, =<span class="number">0xC0000000</span></span><br><span class="line">    str r1 [r0]</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* iomux as gpio */</span></span><br><span class="line">    ldr r0, =<span class="number">0x02290014</span></span><br><span class="line">    ldr r1, =<span class="number">5</span></span><br><span class="line">    str r1 [r0]</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* set output */</span></span><br><span class="line">    ldr r0, =<span class="number">0x020ac004</span></span><br><span class="line">    ldr r1, =<span class="number">8</span></span><br><span class="line">    str r1 [r0]</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 拉低点亮led */</span></span><br><span class="line">    ldr r0, =<span class="number">0x020ac000</span></span><br><span class="line">    ldr r1, =<span class="number">0</span></span><br><span class="line">    str r1 [r0]</span><br><span class="line"></span><br><span class="line">halt:</span><br><span class="line">    b halt</span><br></pre></td></tr></table></figure>
+<p>遗憾的是，并没有点亮led。<br>和start.S差别挺大的。<br>既然单独写的不行，那就把这些代码放到start.S中。<br>还是不行。<br>只有示例才可以。<br>看样子必须得学下汇编，否则和瞎子没有两样。<br><br></p>
+]]></content>
+      <categories>
+        <category>uboot</category>
+      </categories>
+  </entry>
 </search>
